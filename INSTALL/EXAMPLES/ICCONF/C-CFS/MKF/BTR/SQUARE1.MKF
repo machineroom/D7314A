@@ -1,0 +1,36 @@
+ICC=icc
+ILINK=ilink
+ICCONF=icconf
+IEPROM=ieprom
+ICOLLECT=icollect
+
+ROMRUN=ro
+
+ICCOPT=$(S)ta $(S)g $(S)wt
+ILINKOPT=$(S)ta
+ICCONFOPT=$(S)$(ROMRUN) $(S)rs 256k $(S)p Root
+IEPROMOPT=
+ICOLLECTOPT=
+
+all :		square1.bin
+
+square1.bin :	square1.btr square1.epr
+		$(IEPROM) square1.epr $(IEPROMOPT)
+
+square1.btr :	square1.cfb
+		$(ICOLLECT) square1.cfb $(ICOLLECTOPT)
+
+square1.cfb :	square1.cfs setup.h hostpass.lku multpass.lku
+		$(ICCONF) square1.cfs $(ICCONFOPT)
+
+hostpass.lku :	hostpass.tco
+		$(ILINK) hostpass.tco $(S)o hostpass.lku $(S)f cstartup.lnk $(ILINKOPT)
+
+hostpass.tco :	hostpass.c
+		$(ICC) hostpass.c $(S)o hostpass.tco $(ICCOPT)
+
+multpass.lku :	multpass.tco
+		$(ILINK) multpass.tco $(S)o multpass.lku $(S)f cstartrd.lnk $(ILINKOPT)
+
+multpass.tco :	multpass.c
+		$(ICC) multpass.c $(S)o multpass.tco $(ICCOPT)

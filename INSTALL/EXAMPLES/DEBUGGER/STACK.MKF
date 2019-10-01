@@ -1,0 +1,20 @@
+#  PC Makefile to build/clean debugger example program: stack.bah
+#
+#  Note: icc stack checking option /ks
+
+all:		stack.bah
+
+stack.bah:	stack.cah
+		icollect /t stack.cah /o stack.bah
+
+stack.cah:	stack.tax
+		ilink /ta stack.tax /f cnonconf.lnk /o stack.cah
+
+stack.tax:	stack.c
+		icc /ta /g stack.c /o stack.tax /ks
+
+clean:
+		del stack.bah
+		del stack.cfb
+		del stack.cah
+		del stack.tax

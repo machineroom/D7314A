@@ -1,0 +1,163 @@
+# @(#) Module: makefile.nfs     (Requires NDMAKE 4.5 or greater)
+MAKEFILE=makefile.pc
+# @(#) Derived from Makefile.cpp, revision 3.12 of 7/5/91
+
+
+
+# The order to search for rules and files is specified by .SUFFIXES
+.SUFFIXES : .exe .obj .c .asm
+
+# .BEFORE and .AFTER can be used to turn DPATH off and on.
+.BEFORE:
+.AFTER:
+
+# Default rules
+.c.obj:; $(CC) $(CFLAGS) -c $*.c
+
+COMMS=      PCNFS
+COMMSLIB=   ltklib.lib
+
+ENDIAN=     LITTLE_ENDIAN
+
+LINKIOS=    ..\..\linkios\pc
+LINKOPS=    ..\..\linkops\pc
+
+CC=         cl
+CFLAGS=     -AL -DMSDOS -c -D$(ENDIAN) -I$(LINKOPS) -D$(COMMS) -Au -Gt16
+
+LD=         link
+#LDFLAGS=    /stack:0x4000/segments:3071
+LDFLAGS=    /stack:0x4000/segments:1071 /NOE
+
+#Useful commands
+
+SCCSGET=
+SCCSCLEAN=
+
+EVERYSRC=   Makefile.cpp \
+            boot.c boot.h \
+            bsd.h \
+            change.log \
+            filec.c \
+            files.c files.h \
+            helios.h \
+            hostc.c \
+            ims_bcmd.h \
+            info.c info.h \
+            iserver.c iserver.h \
+            iserver.opt \
+            linkops.opt \
+            misc.c misc.h \
+            msdos.h \
+            msdosc.c \
+            nohost.h \
+            pack.c pack.h \
+            parsecl.c parsecl.h \
+            record.c record.h \
+            serve.c serve.h \
+            server.h \
+            serverc.c \
+            sh.c sh.h \
+            sp.h \
+            srvtypes.h \
+            ttyio.c ttyio.h \
+            ucxlibs.opt \
+            vaxrms.c vaxrms.h \
+            vms.h \
+            winlibs.opt
+
+HDRS=       server.h \
+            sp.h \
+            msdos.h \
+            srvtypes.h \
+            ims_bcmd.h
+
+SRCS=       iserver.c \
+            hostc.c \
+            filec.c \
+            serverc.c \
+            sh.c \
+            serve.c \
+            boot.c \
+            pack.c \
+            info.c \
+            ttyio.c \
+            files.c \
+            parsecl.c \
+            record.c \
+            misc.c
+
+OBJECTS=    iserver.obj \
+            hostc.obj \
+            filec.obj \
+            serverc.obj \
+            sh.obj \
+            serve.obj \
+            boot.obj \
+            pack.obj \
+            info.obj \
+            ttyio.obj \
+            files.obj \
+            parsecl.obj \
+            record.obj \
+            msdosc.obj \
+            misc.obj
+
+LOBJ=       $(LINKOPS)\conlib.obj \
+            $(LINKOPS)\debug.obj \
+            $(LINKOPS)\linkops.obj \
+            $(LINKOPS)\lmethod.obj \
+            $(LINKOPS)\lops.obj \
+            $(LINKOPS)\metlnkio.obj \
+            $(LINKOPS)\tcplink.obj \
+            $(LINKOPS)\tops.obj
+
+LNKOBJ=     $(LINKIOS)\b004link.obj \
+            $(LINKIOS)\b008link.obj \
+            $(LINKIOS)\b004asm.obj
+
+TARGET=iserver.exe
+
+all:        $(TARGET)
+
+$(TARGET):  $(OBJECTS)
+            $(LD) $(LDFLAGS) $(OBJECTS) $(LOBJ) $(LNKOBJ) \
+                ,,,$(COMMSLIB);
+
+clean:
+            -del *.obj
+            -del $(TARGET)
+
+#THIS LINE REQUIRED BY MAKEDEPEND!
+
+iserver.obj:  iserver.c server.h srvtypes.h sp.h bsd.h
+iserver.obj:  iserver.h sh.h misc.h serve.h files.h
+iserver.obj:  parsecl.h boot.h
+hostc.obj:    hostc.c server.h
+hostc.obj:    srvtypes.h sp.h bsd.h iserver.h pack.h misc.h
+hostc.obj:    ttyio.h serve.h
+filec.obj:    filec.c server.h srvtypes.h sp.h bsd.h
+filec.obj:    iserver.h pack.h misc.h files.h record.h
+serverc.obj:  serverc.c server.h srvtypes.h sp.h bsd.h
+serverc.obj:  iserver.h pack.h misc.h
+sh.obj:       sh.c server.h
+sh.obj:       srvtypes.h sp.h bsd.h iserver.h sh.h files.h
+serve.obj:    serve.c server.h srvtypes.h sp.h bsd.h
+serve.obj:    iserver.h misc.h ttyio.h serve.h
+boot.obj:     boot.c server.h srvtypes.h sp.h bsd.h
+boot.obj:     iserver.h misc.h boot.h
+pack.obj:     pack.c server.h srvtypes.h sp.h bsd.h iserver.h pack.h
+info.obj:     info.c server.h srvtypes.h sp.h bsd.h iserver.h pack.h
+info.obj:     info.h
+ttyio.obj:    ttyio.c server.h
+ttyio.obj:    srvtypes.h sp.h bsd.h iserver.h pack.h misc.h
+ttyio.obj:    ttyio.h
+files.obj:    files.c server.h srvtypes.h sp.h bsd.h
+files.obj:    files.h
+parsecl.obj:  parsecl.c server.h srvtypes.h sp.h bsd.h iserver.h
+parsecl.obj:  pack.h sh.h parsecl.h
+record.obj:   record.c server.h srvtypes.h sp.h bsd.h
+record.obj:   iserver.h record.h files.h pack.h misc.h
+misc.obj:     misc.c server.h srvtypes.h sp.h
+misc.obj:     bsd.h iserver.h sh.h misc.h files.h
+vaxrms.obj:   vaxrms.c server.h files.h vaxrms.h

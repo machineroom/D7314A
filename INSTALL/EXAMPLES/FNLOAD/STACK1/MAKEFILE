@@ -1,0 +1,11 @@
+#
+#  Sun makefile for dynamic code loading example.
+#  Builds for TA class transputers.
+#
+
+all:
+	$(MAKE) -f stack1.mak
+	$(MAKE) -f stack.mak
+
+clean:
+	rm -f *.tah *.cah *.cfb *.bah *.rsc

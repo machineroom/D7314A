@@ -1,0 +1,40 @@
+
+    The program in this directory shows an example of children being
+parents.  The calling sequences amongst the files is as follows:
+
+
+    hello.c
+      |
+      |
+      V
+    hello1.c
+      |
+      |
+      V
+    hello2.c
+      |
+      |
+      V
+    hello3a.c ----> hello1.c
+                      |
+                      |
+                      V
+                    hello2.c
+                      |
+                      |
+                      V
+                    hello3b.c ---> hello1.c
+                                     |
+                                     |
+                                     V
+                                   hello2.c
+                                     |
+                                     |
+                                     V
+                                   hello3c.c
+
+
+
+Note the re-use of hello1.c and hello2.c.
+
+Note also that this example is too large to run on a 16-bit transputer.

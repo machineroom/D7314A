@@ -1,0 +1,78 @@
+#include "setup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The software consists of two simple processes which communicate with the
+iserver via a multiplexor process.
+
+All the processes execute on the single processor.
+
+*/
+/*}}}*/
+
+/*{{{  Hardware description */
+#include "hwone.cfs"
+/*}}}*/
+
+/*{{{  Constant definitions */
+val n 5;
+/*}}}*/
+
+/*{{{  Software description */
+/*{{{  Software diagram */
+/*
+-- ----------------------------------
+--
+--     Host--HostMult--HelloWorld
+--              |
+--          WorldHello
+--
+-- ----------------------------------
+*/
+/*}}}*/
+
+process (interface (input HostInput, output HostOutput, int Count = n)) HelloWorld, WorldHello;
+
+process (interface (input HostInput, output HostOutput,
+                    input Input[2], int InputSize = 2,
+                    output Output[2], int OutputSize = 2)) HostMult;
+
+input HostInput;
+output HostOutput;
+
+connect HostMult.HostInput to HostInput;   /* Host channel connections */
+connect HostMult.HostOutput to HostOutput;
+
+connect HostMult.Input[0] to HelloWorld.HostOutput;
+connect HostMult.Output[0] to HelloWorld.HostInput;
+
+connect HostMult.Input[1] to WorldHello.HostOutput;
+connect HostMult.Output[1] to WorldHello.HostInput;
+/*}}}*/
+
+/*{{{  Mapping description */
+use "hellop.lku" for HelloWorld;
+place HelloWorld on Root;
+
+use "worldp.lku" for WorldHello;
+place WorldHello on Root;
+
+use "hostmult.lku" for HostMult;
+place HostMult on Root;
+
+place HostInput on host;
+place HostOutput on host;
+
+/*{{{  Superflurous channel placements */
+if ManualPlacement
+  {
+    /*{{{   */
+    place HostMult.HostInput on Root.link[BootLink];
+    place HostMult.HostOutput on Root.link[BootLink];
+    /*}}}*/
+  }
+/*}}}*/
+/*}}}*/

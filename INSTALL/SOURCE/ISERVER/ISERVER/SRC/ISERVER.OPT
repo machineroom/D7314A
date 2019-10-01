@@ -1,0 +1,19 @@
+!
+! Copyright INMOS Limited 1988,1990
+! @(#) Module: iserver.opt, revision 3.1 of 3/19/91
+!
+iserver.obj,-
+hostc.obj,-
+filec.obj,-
+serverc.obj,-
+sh.obj,-
+serve.obj,-
+boot.obj,-
+pack.obj,-
+info.obj,-
+ttyio.obj,-
+files.obj,-
+parsecl.obj,-
+record.obj,-
+misc.obj,-
+vaxrms.obj

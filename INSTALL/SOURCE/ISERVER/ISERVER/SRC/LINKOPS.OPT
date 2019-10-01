@@ -1,0 +1,13 @@
+!
+! Copyright INMOS Limited 1988,1990
+! @(#) Module: linkops.opt, revision 3.2 of 4/4/91
+!
+[-.linkops]conlib.obj,-
+[-.linkops]debug.obj,-
+[-.linkops]linkops.obj,-
+[-.linkops]lmethod.obj,-
+[-.linkops]lops.obj,-
+[-.linkops]tops.obj,-
+[-.linkops]metlnkio.obj,-
+[-.linkops]tcplink.obj,-
+[-.linkios]qt0link.obj

@@ -1,0 +1,5 @@
+
+    The program in this directory shows an example of returning a value
+from a dynamically loaded function not just through its return value but
+also through its parameter list.
+

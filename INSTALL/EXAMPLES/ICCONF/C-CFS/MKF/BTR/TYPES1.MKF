@@ -1,0 +1,30 @@
+ICC=icc
+ILINK=ilink
+ICCONF=icconf
+IEPROM=ieprom
+ICOLLECT=icollect
+
+ROMRUN=ro
+
+ICCOPT=$(S)ta $(S)g $(S)wt
+ILINKOPT=$(S)ta
+ICCONFOPT=$(S)$(ROMRUN) $(S)rs 256k $(S)p Root
+IEPROMOPT=
+ICOLLECTOPT=
+
+all :		types1.bin
+
+types1.bin :	types1.btr types1.epr
+		$(IEPROM) types1.epr $(IEPROMOPT)
+
+types1.btr :	types1.cfb
+		$(ICOLLECT) types1.cfb $(ICOLLECTOPT)
+
+types1.cfb :	types1.cfs setup.h types.lku
+		$(ICCONF) types1.cfs $(ICCONFOPT)
+
+types.lku :	types.tco
+		$(ILINK) types.tco $(S)o types.lku $(S)f cstartup.lnk $(ILINKOPT)
+
+types.tco :	types.c
+		$(ICC) types.c $(S)o types.tco $(ICCOPT)

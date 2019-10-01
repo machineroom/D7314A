@@ -1,0 +1,91 @@
+--{{{  DEF B008
+DEF B008
+  --{{{  SIZES
+  SIZES
+    T2   1
+    C4   1
+    SLOT 10
+    EDGE 10
+  END
+  --}}}
+  --{{{  T2CHAIN
+  T2CHAIN
+    T2 0, LINK 3 C4 0
+  END
+  --}}}
+  --{{{  HARDWIRE
+  HARDWIRE
+    --{{{  TRAMs TO TRAMs
+    SLOT 0, LINK 2 TO SLOT 1, LINK 1
+    SLOT 1, LINK 2 TO SLOT 2, LINK 1
+    SLOT 2, LINK 2 TO SLOT 3, LINK 1
+    SLOT 3, LINK 2 TO SLOT 4, LINK 1
+    SLOT 4, LINK 2 TO SLOT 5, LINK 1
+    SLOT 5, LINK 2 TO SLOT 6, LINK 1
+    SLOT 6, LINK 2 TO SLOT 7, LINK 1
+    SLOT 7, LINK 2 TO SLOT 8, LINK 1
+    SLOT 8, LINK 2 TO SLOT 9, LINK 1
+    --}}}
+
+    --{{{  TRAMs TO C004s
+    --{{{  TRAM 0
+    C4 0, LINK 10 TO SLOT 0, LINK 3
+    --{{{  TRAM 1
+    C4 0, LINK 1 TO SLOT 1, LINK 0
+    C4 0, LINK 11 TO SLOT 1, LINK 3
+    --}}}
+    --{{{  TRAM 2
+    C4 0, LINK 2 TO SLOT 2, LINK 0
+    C4 0, LINK 12 TO SLOT 2, LINK 3
+    --}}}
+    --{{{  TRAM 3
+    C4 0, LINK 3 TO SLOT 3, LINK 0
+    C4 0, LINK 13 TO SLOT 3, LINK 3
+    --}}}
+    --{{{  TRAM 4
+    C4 0, LINK 4 TO SLOT 4, LINK 0
+    C4 0, LINK 14 TO SLOT 4, LINK 3
+    --}}}
+    --{{{  TRAM 5
+    C4 0, LINK 5 TO SLOT 5, LINK 0
+    C4 0, LINK 15 TO SLOT 5, LINK 3
+    --}}}
+    --{{{  TRAM 6
+    C4 0, LINK 6 TO SLOT 6, LINK 0
+    C4 0, LINK 16 TO SLOT 6, LINK 3
+    --}}}
+    --{{{  TRAM 7
+    C4 0, LINK 7 TO SLOT 7, LINK 0
+    C4 0, LINK 17 TO SLOT 7, LINK 3
+    --}}}
+    --{{{  TRAM 8
+    C4 0, LINK 8 TO SLOT 8, LINK 0
+    C4 0, LINK 18 TO SLOT 8, LINK 3
+    --}}}
+    --{{{  TRAM 9
+    C4 0, LINK 9 TO SLOT 9, LINK 0
+    C4 0, LINK 19 TO SLOT 9, LINK 3
+    --}}}
+    --}}}
+
+    --{{{  EDGES 0..8 TO C004
+    C4 0, LINK 20 TO EDGE 0
+    C4 0, LINK 21 TO EDGE 1
+    C4 0, LINK 22 TO EDGE 2
+    C4 0, LINK 23 TO EDGE 3
+    C4 0, LINK 24 TO EDGE 4
+    C4 0, LINK 25 TO EDGE 5
+    C4 0, LINK 26 TO EDGE 6
+    C4 0, LINK 27 TO EDGE 7
+
+    -- Uncomment the next two lines if the patch header wiring is used to 
+    -- connect C004, link 28 to PatchLink0, and C004, link 29 to PatchLink1.
+
+    -- C4 0, LINK 28 TO EDGE 8
+    -- C4 0, LINK 29 TO EDGE 9
+    --}}}
+
+  END
+  --}}}
+--}}}
+PIPE B008 END

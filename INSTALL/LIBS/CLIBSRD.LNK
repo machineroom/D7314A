@@ -1,0 +1,11 @@
+-- @(#)clibsrd.lnk	1.1 5/29/92
+-- C reduced library linker indirect file
+-- Copyright (C) INMOS Ltd, 1992
+--
+-- This linker indirect file lists the libraries required when using the
+-- C reduced library.
+--
+centry.lib
+libcred.lib
+spcred.lib
+

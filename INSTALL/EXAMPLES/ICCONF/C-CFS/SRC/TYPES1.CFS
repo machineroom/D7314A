@@ -1,0 +1,71 @@
+#include "setup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The software consists of a process which displays its parameters.
+
+The process executes on the single processor.
+
+*/
+/*}}}*/
+
+/*{{{  Hardware description */
+#include "hwone.cfs"
+/*}}}*/
+
+/*{{{  Software description */
+/*{{{  Software diagram */
+/*
+-- -------------------
+--
+--     Host--Types
+--
+-- -------------------
+*/
+/*}}}*/
+
+process (interface (input HostInput, output HostOutput,
+                    char ByteVal = (char) 42,
+                         ByteVar = (char) 84,
+                         ByteArrayVal[1] = "\x2a",
+                         ByteArrayVar[1] = "\x54",
+                    int Int32Val = 42,
+                        Int32Var = 84,
+                        Int32ArrayVal[2] = {42,24},
+                        Int32ArrayVar[2] = {84,48},
+                    float Real32Val = 42f,
+                          Real32Var = 84f,
+                          Real32ArrayVal[3] = {42f,24f,42f},
+                          Real32ArrayVar[3] = {84f,48f,84f},
+                    double Real64Val = 42l,
+                           Real64Var = 84l,
+                           Real64ArrayVal[4] = {42l,24l,42l,24l},
+                           Real64ArrayVar[4] = {84l,48l,84l,48l})) Types;
+
+input HostInput;
+output HostOutput;
+
+connect Types.HostInput to HostInput;   /* Host channel connections */
+connect Types.HostOutput to HostOutput;
+/*}}}*/
+
+/*{{{  Mapping description */
+use "types.lku" for Types;
+place Types on Root;
+
+place HostInput on host;
+place HostOutput on host;
+
+/*{{{  Superflurous channel placements */
+if ManualPlacement
+  {
+    /*{{{   */
+    place Types.HostInput on Root.link[BootLink];
+    place Types.HostOutput on Root.link[BootLink];
+    /*}}}*/
+  }
+/*}}}*/
+/*}}}*/

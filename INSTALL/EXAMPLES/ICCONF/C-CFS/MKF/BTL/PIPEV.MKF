@@ -1,0 +1,29 @@
+ICC=icc
+ILINK=ilink
+ICCONF=icconf
+ICOLLECT=icollect
+
+ICCOPT=$(S)ta $(S)g $(S)wt
+ILINKOPT=$(S)ta
+ICCONFOPT=
+ICOLLECTOPT=
+
+all :		pipev.btl
+
+pipev.btl :	pipev.cfb
+		$(ICOLLECT) pipev.cfb $(ICOLLECTOPT)
+
+pipev.cfb :	pipev.cfs setup.h hostpass.lku multpass.lku
+		$(ICCONF) pipev.cfs $(ICCONFOPT)
+
+hostpass.lku :	hostpass.tco
+		$(ILINK) hostpass.tco $(S)o hostpass.lku $(S)f cstartup.lnk $(ILINKOPT)
+
+hostpass.tco :	hostpass.c
+		$(ICC) hostpass.c $(S)o hostpass.tco $(ICCOPT)
+
+multpass.lku :	multpass.tco
+		$(ILINK) multpass.tco $(S)o multpass.lku $(S)f cstartrd.lnk $(ILINKOPT)
+
+multpass.tco :	multpass.c
+		$(ICC) multpass.c $(S)o multpass.tco $(ICCOPT)

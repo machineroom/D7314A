@@ -1,0 +1,55 @@
+/*******************
+* 
+*                            T800                        T414
+*
+*                     ------------------          ------------------
+*                    |   (memory = 1M)  |        |   (memory = 1M)  |
+*                  0 |                  | 2    1 |                  |
+*         Host ------| master_processor |--------|  mult_processor  |
+*                    |                  |        |                  |
+*                    |                  |        |                  |
+*                     ------------------          ------------------
+*
+*
+*    If you change this file to reflect your processor types you should
+*    also change the makefile (or batch file) as well.
+*
+*******************/
+
+
+process(priority = LOW);
+
+/* Hardware description */
+T800 (memory = 1M) master_processor;
+T414 (memory = 1M) mult_processor;
+
+connect master_processor.link[0], host;
+connect master_processor.link[2], mult_processor.link[1];
+
+/* Software description */
+process (stacksize = 20k, heapsize = 20k,
+        interface(input in, output out, input frommult, output tomult)) master;
+
+process (stacksize = 20k, heapsize = 20k,
+        interface(int multiplier, input frommaster, output tomaster)) mult;
+
+mult (multiplier = 4);
+
+input from_host;
+output to_host;
+
+connect master.in, from_host;
+connect master.out, to_host;
+connect master.frommult, mult.tomaster;
+connect master.tomult, mult.frommaster;
+
+/* Network mapping */
+use "master.c8x" for master;
+use "mult.c4x" for mult;
+
+place master on master_processor;
+place mult on mult_processor;
+
+place to_host   on host;
+place from_host on host;
+

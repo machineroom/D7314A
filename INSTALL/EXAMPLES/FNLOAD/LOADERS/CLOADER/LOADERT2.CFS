@@ -1,0 +1,29 @@
+/*
+  Configuration file for dynamic code loader on T-series 16-bit transputer.
+
+  Hardware:
+
+                   host       The host link connection is only to ensure that
+                    |         the configuration is valid. The bootstraps and
+                    |         the loader use the actual boot link rather than 
+              --------------  the specified boot link for communication.
+             |      0       |
+             |              |
+             |   T225, 8K   | The loader requires no more than 8K to run,
+             |              | the actual memory size will be obtained from
+             |              | the environment (IBOARDSIZE).
+              --------------
+*/
+
+
+
+/* will generate a harmless "attribute 'loader.interface' undefined" warning */
+
+T225 (memory = 8K) root;
+
+connect root.link[0] to host; /* Arbitary network boot link */
+
+process (stacksize = 1536, heapsize = 512) loader;
+
+use "cloader.c2h" for loader;
+place loader on root;

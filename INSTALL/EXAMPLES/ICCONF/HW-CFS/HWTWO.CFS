@@ -1,0 +1,32 @@
+#include "hwsetup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The configuration uses two processors, configured as a pipe where the root is
+connected to the host.
+
+*/
+/*}}}*/
+
+/*{{{  Hardware description */
+/*{{{  Hardware diagram */
+/*
+-- --------------------------
+--
+--     Host--Root--Remote
+--
+-- --------------------------
+*/
+/*}}}*/
+
+Processor Root, Remote;
+
+connection HostLink;
+
+connect Root.link[BootLink] to host by HostLink; /* Host link connection */
+
+connect Root.link[2] to Remote.link[1];
+/*}}}*/

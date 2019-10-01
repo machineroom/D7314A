@@ -1,0 +1,92 @@
+/*******************
+*
+*  Debugger example:  cpair  [master.c, mult.c]
+*
+*  Two processor debugger example program enabling breakpoints to be set and
+*  jumping down channels between processes on different processors.
+*
+*  Also note the usage of an edge and reserved attribute on master_processor.
+*
+*
+*       Processor 0            Processor 1                 Processor 2
+* 
+*           TA                     T425                        T414
+*       ----------          ------------------          ------------------
+*      |          |        |   (memory = 1M)  |        |   (memory = 1M)  |
+*    0 |          | 2    1 |                  | 2    1 |                  |
+*   ---| Debugger |--------| master_processor |--------|  mult_processor  |
+*      |          |        |                  |        |                  |
+*      |          |        | (reserved = 20K) |--|3    |                  |
+*       ----------          ------------------          ------------------
+*
+*
+*    NOTE:
+*       You will probably need to change this file to reflect your hardware.
+*
+*    DEBUGGING NOTE:
+*       When running the debugger on Processor 0 the example program boots down
+*       link 1 of Processor 1.  If you run the program without using the
+*       debugger and do not use iskip to skip over Processor 0, the program
+*       will boot down link 0 of Processor 0.  In order to select the
+*       appropriate configuration for when you are debugging or not, a
+*       configuration constant "debugging" has been introduced.
+*
+*******************/
+
+
+
+/*  ====  Configuration Constant  ====  */
+
+val debugging TRUE;     /*  TRUE = debugger present  */
+
+
+
+/*  ====  Hardware Description  ====  */
+
+T425 (memory = 1M, reserved = 20K) master_processor;
+T414 (memory = 1M                ) mult_processor;
+
+edge master_unused_edge;
+
+if (debugging)   {      /*  debugger uses Processor 0  */
+        connect master_processor.link[1] to host;
+}
+else   {                /*  program uses Processor 0  */
+        connect master_processor.link[0] to host;
+}
+
+connect master_processor.link[2] to mult_processor.link[1];
+connect master_processor.link[3] to master_unused_edge;
+
+
+
+/*  ====  Software Description  ====  */
+
+process (stacksize = 20k, heapsize = 20k,
+        interface (input in, output out, input frommult, output tomult)) master;
+
+process (stacksize = 20k, heapsize = 20k,
+        interface (input frommaster, output tomaster, int multiplier)) mult;
+
+mult (multiplier = 4);
+
+
+input  from_host;
+output to_host;
+
+connect master.in       to from_host;
+connect master.out      to to_host;
+connect master.frommult to mult.tomaster;
+connect master.tomult   to mult.frommaster;
+
+
+
+/*  ====  Network Mapping  ====  */
+
+use "master.lku" for master;
+use "mult.lku"   for mult;
+
+place master     on master_processor;
+place mult       on mult_processor;
+place to_host    on host;
+place from_host  on host;

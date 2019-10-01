@@ -1,0 +1,195 @@
+#include "setup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The software consists of n processes placed at various addresses.
+
+The processes are placed on the pipe of processors.
+
+*/
+/*}}}*/
+
+/*{{{  Hardware description */
+#include "hwpipe.cfs"
+/*}}}*/
+
+/*{{{  Constant definitions */
+val n 2;
+
+/*{{{  Symbolic definitions */
+val S_Segment 5;
+
+val L_Code   0;
+val L_Stack  1;
+val L_Vector 2;
+val L_Static 3;
+val L_Heap   4;
+
+val L_Version 0; /* 0, 1, 2 */
+/*}}}*/
+
+/*{{{  Location definitions */
+/*{{{  Static definitions */
+val MemorySize   256K;
+val HardwareSize 160;
+
+val CodeSize   15372;
+val StackSize  40 + process.stacksize;
+val VectorSize 0;
+val StaticSize 2412;
+val HeapSize   process.heapsize;
+
+val SegmentSizes {CodeSize, StackSize, VectorSize, StaticSize, HeapSize};
+
+val MemoryBase 0X80000000;
+
+val MinimumBase MemoryBase + HardwareSize;
+val MaximumBase MemoryBase + MemorySize;
+/*}}}*/
+
+/*{{{  Layout definitions */
+val ReservedSize_1 HardwareSize;
+
+val CodeBase_1   MaximumBase;
+val StackBase_1  CodeBase_1 + (n * CodeSize);
+val VectorBase_1 StackBase_1 + (n * StackSize);
+val StaticBase_1 VectorBase_1 + (n * VectorSize);
+val HeapBase_1   StaticBase_1 + (n * StaticSize);
+
+val ReservedSize_2 HardwareSize + (n * (CodeSize + StackSize));
+
+val CodeBase_2   MinimumBase;
+val StackBase_2  CodeBase_2 + (n * CodeSize);
+val VectorBase_2 MaximumBase;
+val StaticBase_2 VectorBase_2 + (n * VectorSize);
+val HeapBase_2   StaticBase_2 + (n * StaticSize);
+
+val ReservedSize_3 HardwareSize + (n * (CodeSize + StackSize + VectorSize + StaticSize + HeapSize));
+
+val CodeBase_3   MinimumBase;
+val StackBase_3  CodeBase_3 + (n * CodeSize);
+val VectorBase_3 StackBase_3 + (n * StackSize);
+val StaticBase_3 VectorBase_3 + (n * VectorSize);
+val HeapBase_3   StaticBase_3 + (n * StaticSize);
+
+val ReservedSizes {ReservedSize_1, ReservedSize_2, ReservedSize_3};
+
+val CodeBases   {CodeBase_1, CodeBase_2, CodeBase_3};
+val StackBases  {StackBase_1, StackBase_2, StackBase_3};
+val VectorBases {VectorBase_1, VectorBase_2, VectorBase_3};
+val StaticBases {StaticBase_1, StaticBase_2, StaticBase_3};
+val HeapBases   {HeapBase_1, HeapBase_2, HeapBase_3};
+/*}}}*/
+
+val ReservedSize ReservedSizes[L_Version];
+
+val CodeBase   CodeBases[L_Version];
+val StackBase  StackBases[L_Version];
+val VectorBase VectorBases[L_Version];
+val StaticBase StaticBases[L_Version];
+val HeapBase   HeapBases[L_Version];
+
+val SegmentBases_1 {CodeBase, StackBase, VectorBase, StaticBase, HeapBase};
+val SegmentBases_2 {CodeBase + CodeSize, StackBase + StackSize, VectorBase + VectorSize, StaticBase + StaticSize, HeapBase + HeapSize};
+
+val SegmentBases {SegmentBases_1, SegmentBases_2};
+/*}}}*/
+/*}}}*/
+
+/*{{{  Software description */
+/*{{{  Software diagram */
+/*
+-- ---------------------------------------------------------------
+--
+--     Host--HostMult----------------------------
+--              |              |                |
+--           Address[0][0]  Address[0][1] .. Address[p-1][n-1]
+--
+-- ---------------------------------------------------------------
+*/
+/*}}}*/
+
+process (interface (input HostInput, output HostOutput,
+                    input Input[p * n], int InputSize = p * n,
+                    output Output[p * n], int OutputSize = p * n)) HostMult;
+
+process (interface (input Input, output Output,
+                    int SegmentBases[S_Segment], int SegmentSizes[S_Segment] = SegmentSizes, int Number)) Address[p][n];
+
+input HostInput;
+output HostOutput;
+
+connect HostMult.HostInput to HostInput;   /* Host channel connections */
+connect HostMult.HostOutput to HostOutput;
+
+rep i = 0 for p
+  rep j = 0 for n
+    {
+      /*{{{   */
+      Address[i][j].interface (Number = i * n + j);
+      
+      connect Address[i][j].Input to HostMult.Output[i * n + j];
+      connect Address[i][j].Output to HostMult.Input[i * n + j];
+      /*}}}*/
+    }
+/*}}}*/
+
+/*{{{  Mapping description */
+/*{{{  Absolute addressing attributes */
+rep i = 0 for p
+  {
+    /*{{{   */
+    Pipe[i] (reserved = ReservedSize);
+    
+    rep j = 0 for n
+      {
+        /*{{{   */
+        Address[i][j].interface (SegmentBases = SegmentBases[j]);
+        
+        Address[i][j].location (code = SegmentBases[j][L_Code]);
+        Address[i][j].location (stack = SegmentBases[j][L_Stack]);
+        Address[i][j].location (vector = SegmentBases[j][L_Vector]);
+        Address[i][j].location (static = SegmentBases[j][L_Static]);
+        Address[i][j].location (heap = SegmentBases[j][L_Heap]);
+        /*}}}*/
+      }
+    /*}}}*/
+  }
+/*}}}*/
+
+use "hostmult.lku" for HostMult;
+place HostMult on RootPipe;
+
+/*{{{  Alternative process object files */
+if ManualPlacement
+  {
+    /*{{{   */
+    rep i = 0 for p
+      rep j = 0 for n
+        use "address.lku" for Address[i][j];
+    /*}}}*/
+  }
+else
+  use "address.lku" for process;
+/*}}}*/
+
+rep i = 0 for p
+  rep j = 0 for n
+    place Address[i][j] on Pipe[i];
+
+place HostInput on host;
+place HostOutput on host;
+
+/*{{{  Superflurous channel placements */
+if ManualPlacement
+  {
+    /*{{{   */
+    place HostMult.HostInput on RootPipe.link[BootLink];
+    place HostMult.HostOutput on RootPipe.link[BootLink];
+    /*}}}*/
+  }
+/*}}}*/
+/*}}}*/

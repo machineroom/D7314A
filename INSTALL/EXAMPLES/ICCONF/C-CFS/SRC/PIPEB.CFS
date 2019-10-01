@@ -1,0 +1,217 @@
+#include "setup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The software consists of n processes, connected as a ring, which communicate
+with each other performing simple arithmetic operations.
+
+The processes are placed on the pipe of processors.
+
+*/
+/*}}}*/
+
+/*{{{  Hardware description */
+#include "hwpipe.cfs"
+/*}}}*/
+
+/*{{{  Constant definitions */
+val ExtraProcesses 2;
+
+val n 2 * p - 1 + ExtraProcesses;
+/*}}}*/
+
+/*{{{  Software description */
+/*{{{  Software diagram */
+/*
+-- ---------------------------------------------------------
+--
+--     Host--HostPass--------------------------
+--              |                             |
+--           MultPass[0]--MultPass[1]--..--MultPass[n-1]
+--
+-- ---------------------------------------------------------
+*/
+/*}}}*/
+
+process (interface (input HostInput, output HostOutput,
+                    input Input[1], int InputSize = 1,
+                    output Output[1], int OutputSize = 1)) HostPass;
+
+process (interface (input Input[1], int InputSize = 1,
+                    output Output[1], int OutputSize = 1)) MultPass[n];
+
+process (interface (input Input, output Output)) IBuffer[2 * p];
+
+process (interface (input Input, output Output)) OBuffer[2 * p];
+
+input HostInput;
+output HostOutput;
+
+connect HostPass.HostInput to HostInput;   /* Host channel connections */
+connect HostPass.HostOutput to HostOutput;
+
+/*{{{  connect HostPass.Output[0] to MultPass[0].Input[0]; */
+connect HostPass.Output[0] to OBuffer[0].Input;
+connect OBuffer[0].Output to IBuffer[0].Input;
+connect IBuffer[0].Output to MultPass[0].Input[0];
+/*}}}*/
+/*{{{  connect HostPass.Input[0] to MultPass[n - 1].Output[0]; */
+connect HostPass.Input[0] to IBuffer[2 * p - 1].Output;
+connect IBuffer[2 * p - 1].Input to OBuffer[2 * p - 1].Output;
+connect OBuffer[2 * p - 1].Input to MultPass[n - 1].Output[0];
+/*}}}*/
+
+rep i = 0 for n - 1
+  /*{{{  connect MultPass[i].Output[0] to MultPass[i + 1].Input[0]; */
+  {
+    if i < 2 * p - 2
+      {
+        /*{{{   */
+        connect MultPass[i].Output[0] to OBuffer[i + 1].Input;
+        connect OBuffer[i + 1].Output to IBuffer[i + 1].Input;
+        connect IBuffer[i + 1].Output to MultPass[i + 1].Input[0];
+        /*}}}*/
+      }
+    else
+      connect MultPass[i].Output[0] to MultPass[i + 1].Input[0];
+  }
+  /*}}}*/
+/*}}}*/
+
+/*{{{  Mapping description */
+/*{{{  use "hostpass.lku" for HostPass; */
+use "hostpass.lku" for HostPass;
+
+use "buffer.lku" for OBuffer[0];
+use "buffer.lku" for IBuffer[2 * p - 1];
+/*}}}*/
+/*{{{  place HostPass on RootPipe; */
+place HostPass on RootPipe;
+
+place OBuffer[0] on RootPipe;
+place IBuffer[2 * p - 1] on RootPipe;
+/*}}}*/
+
+/*{{{  Alternative process object files */
+if ManualPlacement
+  {
+    /*{{{   */
+    rep i = 0 for n
+      /*{{{  use "multpass.lku" for MultPass[i]; */
+      {
+        use "multpass.lku" for MultPass[i];
+        
+        if i < 2 * p - 1
+          {
+            /*{{{   */
+            use "buffer.lku" for IBuffer[i];
+            use "buffer.lku" for OBuffer[i + 1];
+            /*}}}*/
+          }
+      }
+      /*}}}*/
+    /*}}}*/
+  }
+else
+  /*{{{  use "multpass.lku" for process; */
+  {
+    use "multpass.lku" for process;
+    
+    rep i = 0 for 2 * p - 1
+      {
+        /*{{{   */
+        use "buffer.lku" for IBuffer[i];
+        use "buffer.lku" for OBuffer[i + 1];
+        /*}}}*/
+      }
+  }
+  /*}}}*/
+/*}}}*/
+
+rep i = 0 for n
+  {
+    /*{{{   */
+    if i < p
+      /*{{{  place MultPass[i] on Pipe[i]; */
+      {
+        place MultPass[i] on Pipe[i];
+      
+        place IBuffer[i] on Pipe[i];
+        place OBuffer[i + 1] on Pipe[i];
+      }
+      /*}}}*/
+    else if i < 2 * p - 1
+      /*{{{  place MultPass[i] on Pipe[(2 * p - 1) - (i + 1)]; */
+      {
+        place MultPass[i] on Pipe[(2 * p - 1) - (i + 1)];
+      
+        place IBuffer[i] on Pipe[(2 * p - 1) - (i + 1)];
+        place OBuffer[i + 1] on Pipe[(2 * p - 1) - (i + 1)];
+      }
+      /*}}}*/
+    else
+      place MultPass[i] on Pipe[0];
+    /*}}}*/
+  }
+
+place HostInput on host;
+place HostOutput on host;
+
+/*{{{  Superflurous channel placements */
+if ManualPlacement
+  {
+    /*{{{   */
+    place HostPass.HostInput on RootPipe.link[BootLink];
+    place HostPass.HostOutput on RootPipe.link[BootLink];
+    
+    /*{{{  place HostPass.Input[0] on RootPipe.link[2]; */
+    place IBuffer[2 * p - 1].Input on RootPipe.link[2];
+    /*}}}*/
+    /*{{{  place HostPass.Output[0] on RootPipe.link[2]; */
+    place OBuffer[0].Output on RootPipe.link[2];
+    /*}}}*/
+    
+    rep i = 0 for 2 * p - 1
+      {
+        /*{{{   */
+        if i < p
+          {
+            /*{{{   */
+            /*{{{  place MultPass[i].Input[0] on Pipe[i].link[1]; */
+            place IBuffer[i].Input on Pipe[i].link[1];
+            /*}}}*/
+            if i < p - 1
+              /*{{{  place MultPass[i].Output[0] on Pipe[i].link[2]; */
+              place OBuffer[i + 1].Output on Pipe[i].link[2];
+              /*}}}*/
+            else if i < (2 * p - 1) - 1
+              /*{{{  place MultPass[i].Output[0] on Pipe[i].link[1]; */
+              place OBuffer[i + 1].Output on Pipe[i].link[1];
+              /*}}}*/
+            /*}}}*/
+          }
+        else
+          {
+            /*{{{   */
+            /*{{{  place MultPass[i].Input[0] on Pipe[(2 * p - 1) - (i + 1)].link[2]; */
+            place IBuffer[i].Input on Pipe[(2 * p - 1) - (i + 1)].link[2];
+            /*}}}*/
+            if i < (2 * p - 1) - 1
+              /*{{{  place MultPass[i].Output[0] on Pipe[(2 * p - 1) - (i + 1)].link[1]; */
+              place OBuffer[i + 1].Output on Pipe[(2 * p - 1) - (i + 1)].link[1];
+              /*}}}*/
+            /*}}}*/
+          }
+        /*}}}*/
+      }
+    
+    /*{{{  place MultPass[n - 1].Output[0] on Pipe[0].link[1]; */
+    place OBuffer[2 * p - 1].Output on Pipe[0].link[1];
+    /*}}}*/
+    /*}}}*/
+  }
+/*}}}*/
+/*}}}*/

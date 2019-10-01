@@ -1,0 +1,36 @@
+ICC=icc
+ILINK=ilink
+ICCONF=icconf
+IEPROM=ieprom
+ICOLLECT=icollect
+
+ROMRUN=ro
+
+ICCOPT=$(S)ta $(S)g $(S)wt
+ILINKOPT=$(S)ta
+ICCONFOPT=$(S)$(ROMRUN) $(S)rs 256k $(S)p Root
+IEPROMOPT=
+ICOLLECTOPT=
+
+all :		lowhigh1.bin
+
+lowhigh1.bin :	lowhigh1.btr lowhigh1.epr
+		$(IEPROM) lowhigh1.epr $(IEPROMOPT)
+
+lowhigh1.btr :	lowhigh1.cfb
+		$(ICOLLECT) lowhigh1.cfb $(ICOLLECTOPT)
+
+lowhigh1.cfb :	lowhigh1.cfs setup.h lowhigh.lku hostmult.lku
+		$(ICCONF) lowhigh1.cfs $(ICCONFOPT)
+
+lowhigh.lku :	lowhigh.tco
+		$(ILINK) lowhigh.tco $(S)o lowhigh.lku $(S)f cstartup.lnk $(ILINKOPT)
+
+lowhigh.tco :	lowhigh.c
+		$(ICC) lowhigh.c $(S)o lowhigh.tco $(ICCOPT)
+
+hostmult.lku :	hostmult.tco
+		$(ILINK) hostmult.tco $(S)o hostmult.lku $(S)f cstartrd.lnk $(ILINKOPT)
+
+hostmult.tco :	hostmult.c
+		$(ICC) hostmult.c $(S)o hostmult.tco $(ICCOPT)

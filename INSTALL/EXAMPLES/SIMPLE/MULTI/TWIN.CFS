@@ -1,0 +1,67 @@
+/* (c) Copyright INMOS Limited  1992. */
+
+/* This defines a network of two processors:
+
+   HOST ---- T425+1M ---- T800+32K
+
+*/
+
+/* Define the root processor */
+
+T425 (memory = 1M) root;
+
+/* and the servant processor */
+
+T800 (memory = 32K) servant;
+
+/* and their connections */
+
+connect host to root.link[0];
+connect root.link[2] to servant.link[1];
+
+/* The software is similar */
+
+/* The controller will reside on the root, and it has access */
+/* to the host's services. Hence, it must have as its first  */
+/* parameter the channel for input from the host, and as its */
+/* second parameter the channel for output to the host.      */
+
+process (stacksize = 10K, heapsize = 100K,
+         interface (input host_in, output host_out, input secondary)
+         ) controller;
+
+
+/* The subordinate will reside on a node remote from the host.*/
+/* It will not have access to the host's services, and so     */
+/* should not have those connections defined */
+
+process (stacksize = 2K, heapsize = 4K,
+         interface (output result)
+         ) subordinate;
+
+/* The network has two edges; and these will be mapped onto   */
+/* the host */
+
+input HostInput;      /* Define the edge from the host */
+output HostOutput;    /* Define the edge to the host   */
+
+connect HostInput to controller.host_in;
+connect HostOutput to controller.host_out;
+
+connect controller.secondary to subordinate.result;
+
+/* These can now be mapped - the controller on the root, and */
+/* the subordinate on to the other one. */
+
+place controller on root;
+
+place subordinate on servant;
+
+/* And the edge connections placed on the host connection    */
+
+place HostInput on host;  /* say that the software edges are */
+place HostOutput on host; /* mapped onto the hardware        */
+                          /* host edge */
+
+use "hello.lku" for controller;
+use "world.lku" for subordinate;

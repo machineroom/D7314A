@@ -1,0 +1,40 @@
+# @(#) Derived from: Makefile.cpp, revision 1.3 of 1/24/91
+# Created with cppmake
+#
+
+# This flavour is for PC or Compatible or the NEC PC
+
+
+
+ENDIAN=     LITTLE_ENDIAN
+
+CC=         cl
+CFLAGS=     -DMSDOS -c -D$(ENDIAN) -DB4ASM -Au -Gt16
+MODEL=      L
+
+OBJECTS=    b004link.obj \
+            b004asm.obj \
+            b008link.obj
+
+# Useful commands
+
+HDRS=       linkio.h \
+            ims_bcmd.h
+
+all:        $(OBJECTS)
+
+clean:
+	           del *.obj
+
+
+b004link.obj: b004link.c linkio.h
+	     $(CC) -A$(MODEL) $(CFLAGS) b004link.c
+b008link.obj: b008link.c linkio.h ims_bcmd.h
+	     $(CC) -A$(MODEL) $(CFLAGS) b008link.c
+b011link.obj: b011link.c linkio.h
+b014link.obj: b014link.c linkio.h ims_bcmd.h
+b016link.obj: b016link.c linkio.h ims_bcmd.h
+s386link.obj: s386link.c linkio.h ims_bcmd.h
+b004asm.obj:  b004asm.asm
+	     masm /mx /ml b004asm;
+qt0link.obj:  qt0link.c linkio.h

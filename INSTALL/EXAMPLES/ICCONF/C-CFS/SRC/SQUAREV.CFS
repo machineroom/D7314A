@@ -1,0 +1,158 @@
+#include "setup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The software consists of p * p * n processes, connected as a square array,
+which communicate with each other performing simple arithmetic operations.
+
+The processes are placed on the square array of processors.
+
+*/
+/*}}}*/
+
+/*{{{  Hardware description */
+#include "hwsquare.cfs"
+/*}}}*/
+
+/*{{{  Constant definitions */
+val c 2;
+val n 1;
+/*}}}*/
+
+/*{{{  Software description */
+/*{{{  Software diagram */
+/*
+-- --------------------------------------------------------------------------
+--
+--     Host--HostPass
+--              |                 |                     |
+--         --MultPass[0][0]----MultPass[0][1]--....--MultPass[0][p-1]----
+--              |                 |                     |
+--         --MultPass[1][0]----MultPass[1][1]--....--MultPass[1][p-1]----
+--              |                 |                     |
+--             ...               ...                   ...
+--              |                 |                     |
+--         --MultPass[p-1][0]--MultPass[p-1][1]--..--MultPass[p-1][p-1]--
+--              |                 |                     |
+--                                                   HostPass
+--
+-- --------------------------------------------------------------------------
+*/
+/*}}}*/
+
+process (interface (input HostInput, output HostOutput,
+                    input Input[2 * n * c], int InputSize = 2 * n * c,
+                    output Output[2 * n * c], int OutputSize = 2 * n * c)) HostPass;
+
+process (interface (input Input[4 * c], int InputSize = 4 * c,
+                    output Output[4 * c], int OutputSize = 4 * c)) MultPass[p][p][n];
+
+input HostInput;
+output HostOutput;
+
+connection RootToHost, HostToRoot;
+
+connect HostPass.HostInput to HostInput by RootToHost;   /* Host channel connections */
+connect HostPass.HostOutput to HostOutput by HostToRoot;
+
+rep k = 0 for n
+  rep l = 0 for c
+    {
+      /*{{{   */
+      connect HostPass.Input[k * c + l] to MultPass[0][0][k].Output[(Up * c) + l];
+      connect HostPass.Output[k * c + l] to MultPass[0][0][k].Input[(Up * c) + l];
+      /*}}}*/
+    }
+
+rep k = 0 for n
+  rep l = 0 for c
+    {
+      /*{{{   */
+      connect HostPass.Input[(n + k) * c + l] to MultPass[p - 1][p - 1][k].Output[(Down * c) + l];
+      connect HostPass.Output[(n + k) * c + l] to MultPass[p - 1][p - 1][k].Input[(Down * c) + l];
+      /*}}}*/
+    }
+
+rep i = 0 for p
+  rep k = 0 for n
+    rep l = 0 for c
+      {
+        /*{{{   */
+        connect MultPass[i][p - 1][k].Input[(Right * c) + l] to MultPass[(i + 1) % p][0][k].Output[(Left * c) + l];
+        connect MultPass[i][p - 1][k].Output[(Right * c) + l] to MultPass[(i + 1) % p][0][k].Input[(Left * c) + l];
+        /*}}}*/
+      }
+
+rep j = 0 for p - 1
+  rep k = 0 for n
+    rep l = 0 for c
+      {
+        /*{{{   */
+        connect MultPass[p - 1][j][k].Input[(Down * c) + l] to MultPass[0][j + 1][k].Output[(Up * c) + l];
+        connect MultPass[p - 1][j][k].Output[(Down * c) + l] to MultPass[0][j + 1][k].Input[(Up * c) + l];
+        /*}}}*/
+      }
+
+rep i = 0 for p
+  rep j = 0 for p
+    rep k = 0 for n
+      rep l = 0 for c
+        {
+          /*{{{   */
+          if i < p - 1
+            {
+              /*{{{   */
+              connect MultPass[i][j][k].Input[(Down * c) + l] to MultPass[i + 1][j][k].Output[(Up * c) + l];
+              connect MultPass[i][j][k].Output[(Down * c) + l] to MultPass[i + 1][j][k].Input[(Up * c) + l];
+              /*}}}*/
+            }
+          if j < p - 1
+            {
+              /*{{{   */
+              connect MultPass[i][j][k].Input[(Right * c) + l] to MultPass[i][j + 1][k].Output[(Left * c) + l];
+              connect MultPass[i][j][k].Output[(Right * c) + l] to MultPass[i][j + 1][k].Input[(Left * c) + l];
+              /*}}}*/
+            }
+          /*}}}*/
+        }
+/*}}}*/
+
+/*{{{  Mapping description */
+use "hostpass.lku" for HostPass;
+place HostPass on RootSquare;
+
+/*{{{  Alternative process object files */
+if ManualPlacement
+  {
+    /*{{{   */
+    rep i = 0 for p
+      rep j = 0 for p
+        rep k = 0 for n
+          use "multpass.lku" for MultPass[i][j][k];
+    /*}}}*/
+  }
+else
+  use "multpass.lku" for process;
+/*}}}*/
+
+rep i = 0 for p
+  rep j = 0 for p
+    rep k = 0 for n
+      place MultPass[i][j][k] on Square[i][j];
+
+place HostInput on host;
+place HostOutput on host;
+
+/*{{{  Superflurous channel placements */
+if ManualPlacement
+  {
+    /*{{{   */
+    place HostPass.HostInput on RootSquare.link[BootLink];
+    place HostPass.HostOutput on RootSquare.link[BootLink];
+    /*}}}*/
+  }
+/*}}}*/
+/*}}}*/

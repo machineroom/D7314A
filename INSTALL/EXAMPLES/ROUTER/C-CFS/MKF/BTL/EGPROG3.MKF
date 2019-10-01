@@ -1,0 +1,41 @@
+ICC=icc
+ILINK=ilink
+ICCONF=icconf
+ICOLLECT=icollect
+
+ICCOPT=$(S)ta $(S)g $(S)wt
+ILINKOPT=$(S)ta
+ICCONFOPT=
+ICOLLECTOPT=
+
+all :		egprog3.btl
+
+egprog3.btl :	egprog3.cfb
+		$(ICOLLECT) egprog3.cfb $(ICOLLECTOPT)
+
+egprog3.cfb :	egprog3.cfs filter.lku generate.lku monitor.lku result.lku
+		$(ICCONF) egprog3.cfs $(ICCONFOPT)
+
+filter.lku :	filter.tco
+		$(ILINK) filter.tco $(S)o filter.lku $(S)f cstartrd.lnk $(ILINKOPT)
+
+filter.tco :	filter.c
+		$(ICC) filter.c $(S)o filter.tco $(ICCOPT)
+
+generate.lku :	generate.tco
+		$(ILINK) generate.tco $(S)o generate.lku $(S)f cstartrd.lnk $(ILINKOPT)
+
+generate.tco :	generate.c
+		$(ICC) generate.c $(S)o generate.tco $(ICCOPT)
+
+monitor.lku :	monitor.tco
+		$(ILINK) monitor.tco $(S)o monitor.lku $(S)f cstartup.lnk $(ILINKOPT)
+
+monitor.tco :	monitor.c
+		$(ICC) monitor.c $(S)o monitor.tco $(ICCOPT)
+
+result.lku :	result.tco
+		$(ILINK) result.tco $(S)o result.lku $(S)f cstartrd.lnk $(ILINKOPT)
+
+result.tco :	result.c
+		$(ICC) result.c $(S)o result.tco $(ICCOPT)

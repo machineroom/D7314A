@@ -1,0 +1,156 @@
+# @(#) Module: makefile.vax
+MAKEFILE=makefile.vax
+# @(#) Derived from Makefile.cpp, revision 3.12 of 7/5/91
+
+
+
+LINKOPS=    [-.linkops]
+LINKIOS=    [-.linkios]
+
+CC=         cc
+CFLAGS=     /DEFINE=LITTLE_ENDIAN /INCLUDE=$(LINKOPS)
+
+NETLIBOPT=winlibs
+LD=         LINK
+#LDFLAGS=    ISERVER/OPT/DEBUG/MAP
+LDFLAGS=    /EXEC=ISERVER
+
+# The Inmos 1 Make is completely Brain-damaged and needs these
+# rules !
+#.c.obj:
+#	           $(CC) $(CFLAGS) $*
+
+# Useful commands
+
+
+EVERYSRC=   Makefile.cpp \
+            boot.c boot.h \
+            bsd.h \
+            change.log \
+            filec.c \
+            files.c files.h \
+            helios.h \
+            hostc.c \
+            ims_bcmd.h \
+            info.c info.h \
+            iserver.c iserver.h \
+            iserver.opt \
+            linkops.opt \
+            misc.c misc.h \
+            msdos.h \
+            msdosc.c \
+            nohost.h \
+            pack.c pack.h \
+            parsecl.c parsecl.h \
+            record.c record.h \
+            serve.c serve.h \
+            server.h \
+            serverc.c \
+            sh.c sh.h \
+            sp.h \
+            srvtypes.h \
+            ttyio.c ttyio.h \
+            ucxlibs.opt \
+            vaxrms.c vaxrms.h \
+            vms.h \
+            winlibs.opt
+
+HDRS=       server.h \
+            sp.h \
+            vms.h \
+            srvtypes.h \
+            ims_bcmd.h
+
+SRCS=       iserver.c \
+            hostc.c \
+            filec.c \
+            serverc.c \
+            sh.c \
+            serve.c \
+            boot.c \
+            pack.c \
+            info.c \
+            ttyio.c \
+            files.c \
+            parsecl.c \
+            record.c \
+            vaxrms.c \
+            misc.c
+
+OBJECTS=    iserver.obj \
+            hostc.obj \
+            filec.obj \
+            serverc.obj \
+            sh.obj \
+            serve.obj \
+            boot.obj \
+            pack.obj \
+            info.obj \
+            ttyio.obj \
+            files.obj \
+            parsecl.obj \
+            record.obj \
+            vaxrms.obj \
+            misc.obj
+
+
+
+TARGET=iserver.exe
+
+all:        $(TARGET)
+
+$(TARGET):  $(OBJECTS)
+            $(LD) $(LDFLAGS) iserver/opt,linkops/opt,$(NETLIBOPT)/opt
+
+clean:
+	           del *.obj;*
+	           del $(TARGET);*
+
+
+#THIS LINE REQUIRED BY MAKEDEPEND!
+
+
+iserver.obj:	iserver.c server.h srvtypes.h sp.h bsd.h iserver.h sh.h misc.h serve.h files.h parsecl.h boot.h
+	$(CC) $(CFLAGS) iserver.c
+
+hostc.obj:	hostc.c server.h srvtypes.h sp.h bsd.h iserver.h pack.h misc.h ttyio.h serve.h
+	$(CC) $(CFLAGS) hostc.c
+
+filec.obj:	filec.c server.h srvtypes.h sp.h bsd.h iserver.h pack.h misc.h files.h record.h
+	$(CC) $(CFLAGS) filec.c
+
+serverc.obj:	serverc.c server.h srvtypes.h sp.h bsd.h iserver.h pack.h misc.h
+	$(CC) $(CFLAGS) serverc.c
+
+sh.obj:		sh.c server.h srvtypes.h sp.h bsd.h iserver.h sh.h files.h
+	$(CC) $(CFLAGS) sh.c
+
+serve.obj:	serve.c server.h srvtypes.h sp.h bsd.h iserver.h misc.h ttyio.h serve.h
+	$(CC) $(CFLAGS) serve.c
+
+boot.obj:	boot.c server.h srvtypes.h sp.h bsd.h iserver.h misc.h 	boot.h
+	$(CC) $(CFLAGS) boot.c
+
+pack.obj:	pack.c server.h srvtypes.h sp.h bsd.h iserver.h pack.h
+	$(CC) $(CFLAGS) pack.c
+
+info.obj:	info.c server.h srvtypes.h sp.h bsd.h iserver.h pack.h info.h
+	$(CC) $(CFLAGS) info.c
+
+ttyio.obj:	ttyio.c server.h srvtypes.h sp.h bsd.h iserver.h pack.h misc.h ttyio.h
+	$(CC) $(CFLAGS) ttyio.c
+
+files.obj:	files.c server.h srvtypes.h sp.h bsd.h files.h
+	$(CC) $(CFLAGS) files.c
+
+parsecl.obj:	parsecl.c server.h srvtypes.h sp.h bsd.h iserver.h pack.h sh.h parsecl.h
+	$(CC) $(CFLAGS) parsecl.c
+
+record.obj:	record.c server.h srvtypes.h sp.h bsd.h iserver.h record.h files.h pack.h misc.h
+	$(CC) $(CFLAGS) record.c
+
+misc.obj:	misc.c server.h srvtypes.h sp.h bsd.h iserver.h sh.h misc.h files.h
+	$(CC) $(CFLAGS) misc.c
+
+vaxrms.obj:	vaxrms.c server.h files.h vaxrms.h
+	$(CC) $(CFLAGS) vaxrms.c

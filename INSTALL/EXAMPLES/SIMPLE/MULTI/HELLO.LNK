@@ -1,0 +1,4 @@
+-- (c) Copyright INMOS Limited  1992.
+hello.t5x
+#include cstartup.lnk
+

@@ -1,0 +1,90 @@
+#include "setup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The software consists of two simple processes which communicate with the
+iserver via a multiplexor process.
+
+One simple process and the multiplexor process execute on the root processor
+while the other process executes on the second processor.
+
+*/
+/*}}}*/
+
+/*{{{  Hardware description */
+#include "hwtwo.cfs"
+/*}}}*/
+
+/*{{{  Constant definitions */
+val n 5;
+/*}}}*/
+
+/*{{{  Software description */
+/*{{{  Software diagram */
+/*
+-- ----------------------------------
+--
+--     Host--HostMult--HelloWorld
+--              |
+--          WorldHello
+--
+-- ----------------------------------
+*/
+/*}}}*/
+
+process (interface (input HostInput, output HostOutput, int Count = n)) HelloWorld, WorldHello;
+
+process (interface (input HostInput, output HostOutput,
+                    input Input[2], int InputSize = 2,
+                    output Output[2], int OutputSize = 2)) HostMult;
+
+input HostInput;
+output HostOutput;
+
+connection HostMultHostInputToHostInput, HostMultHostOutputToHostOutput;
+
+connection HostMultInput0ToHelloWorldHostOutput, HostMultOutput0ToHelloWorldHostInput;
+connection HostMultInput1ToWorldHelloHostOutput, HostMultOutput1ToWorldHelloHostInput;
+
+connect HostMult.HostInput to HostInput by HostMultHostInputToHostInput;     /* Host channel connections */
+connect HostMult.HostOutput to HostOutput by HostMultHostOutputToHostOutput;
+
+connect HostMult.Input[0] to HelloWorld.HostOutput by HostMultInput0ToHelloWorldHostOutput;
+connect HostMult.Output[0] to HelloWorld.HostInput by HostMultOutput0ToHelloWorldHostInput;
+
+connect HostMult.Input[1] to WorldHello.HostOutput by HostMultInput1ToWorldHelloHostOutput;
+connect HostMult.Output[1] to WorldHello.HostInput by HostMultOutput1ToWorldHelloHostInput;
+/*}}}*/
+
+/*{{{  Mapping description */
+use "hellop.lku" for HelloWorld;
+place HelloWorld on Root;
+
+use "worldp.lku" for WorldHello;
+place WorldHello on Remote;
+
+use "hostmult.lku" for HostMult;
+place HostMult on Root;
+
+place HostInput on host;
+place HostOutput on host;
+
+/*{{{  Superflurous channel placements */
+if ManualPlacement
+  {
+    /*{{{   */
+    place HostMult.HostInput on Root.link[BootLink];
+    place HostMult.HostOutput on Root.link[BootLink];
+    
+    place HostMult.Input[1] on Root.link[2];
+    place HostMult.Output[1] on Root.link[2];
+    
+    place WorldHello.HostInput on Remote.link[1];
+    place WorldHello.HostOutput on Remote.link[1];
+    /*}}}*/
+  }
+/*}}}*/
+/*}}}*/

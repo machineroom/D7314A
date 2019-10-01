@@ -1,0 +1,12 @@
+-- @(#)startup.lnk	1.4 5/22/92 
+-- C startup linker indirect file
+-- Copyright (C) INMOS Ltd, 1989, 1990, 1991, 1992
+--
+-- This linker indirect file is supplied to ease transition to the new toolset.
+-- It will not be supported in future toolsets.
+-- If you wish to build a non-configured system then use cnonconf.lnk.
+-- If you wish to build a configured system then use cstartup.lnk.
+--
+#mainentry C.ENTRY
+#reference information%module
+#include clibs.lnk

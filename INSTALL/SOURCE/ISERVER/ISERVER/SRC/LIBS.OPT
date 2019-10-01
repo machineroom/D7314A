@@ -1,0 +1,8 @@
+!
+! Copyright INMOS Limited 1988,1990
+! @(#) Module: libs.opt, revision 3.1 of 3/19/91
+!
+twg$tcp:[netdist.lib]twglib/lib,-
+twg$tcp:[netdist.lib]libnet/lib,-
+twg$tcp:[netdist.lib]libnetacc/lib,-
+sys$share:vaxcrtl/share

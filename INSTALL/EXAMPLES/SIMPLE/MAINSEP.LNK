@@ -1,0 +1,7 @@
+-- (c) Copyright INMOS Limited  1992.
+--
+mainsep.tco
+hellosep.tco
+worldsep.tco
+#include cstartup.lnk
+

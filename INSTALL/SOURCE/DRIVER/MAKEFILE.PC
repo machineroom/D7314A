@@ -1,0 +1,62 @@
+## ----------------------------------------------------------------------------
+##
+##     SCCS ID : @(#)  makefile.pc 1.4 92/07/01 13:16:24
+##
+##     Object Name : makefile.pc
+##     Revision    : 1.5 (AGW)
+##
+##     (c) Copyright INMOS Limited.
+##     All Rights Reserved.
+##
+##     DESCRIPTION
+##         None.
+##
+##     NOTES
+##         None.
+##
+##     HISTORY
+##         10.12.92 : AGW : Added toolset targets. Removed final copy.
+##
+## ----------------------------------------------------------------------------
+
+#
+#  Microsoft C V5.1 specific macro definitions
+#
+E=.exe
+O=.obj
+L=.lib
+#
+CC=cl /c /AS /Od /W3 /Za
+CCOPT=/DMSDOS
+#
+LINK=link /NOI /STACK:0X4000
+LINKOPT=;
+#
+COPY=copy
+
+
+#
+#  List of driver program source and object files
+#
+DRIVERHDR=
+#
+DRIVERDEP=
+#
+DRIVEROBJ=driver$(O) $(DRIVERDEP)
+#
+#  List of driver program object files for linker
+#
+DRIVERLINKOPT=$(DRIVEROBJ),$@
+
+Dx314 C_v4 Dx305 : all
+
+all :		driver$(E)
+#		$(COPY) driver$(E) $(BIN)
+
+driver$(E) :	$(DRIVEROBJ)
+		$(LINK) $(DRIVERLINKOPT) $(LINKOPT)
+
+driver$(O) :	driver.c $(DRIVERHDR) $(DRIVERDEP)
+		$(CC) $(CCOPT) driver.c
+
+clean:

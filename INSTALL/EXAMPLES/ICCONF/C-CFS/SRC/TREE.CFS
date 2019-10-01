@@ -1,0 +1,130 @@
+#include "setup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The software consists of processes, connected as a pipe and ring, which
+communicate with each other performing simple arithmetic operations.
+
+The processes are placed on the tree of processors.
+
+*/
+/*}}}*/
+
+/*{{{  Hardware description */
+#include "hwtree.cfs"
+/*}}}*/
+
+/*{{{  Software description */
+/*{{{  Software diagram */
+/*
+-- -----------------------------------------------------------------------------
+--
+--           MultPassOne[5]
+--              |
+--     Host--HostPass
+--              |
+--           MultPassTwo--MultPassOne[0]--MultPassOne[1]--..--MultPassOne[4]
+--              |                                                |
+--              --------------------------------------------------
+--
+-- -----------------------------------------------------------------------------
+*/
+/*}}}*/
+
+process (interface (input HostInput, output HostOutput,
+                    input Input[2], int InputSize = 2,
+                    output Output[2], int OutputSize = 2)) HostPass;
+
+process (interface (input Input[1], int InputSize = 1,
+                    output Output[1], int OutputSize = 1)) MultPassOne[6];
+
+process (interface (input Input[2], int InputSize = 2,
+                    output Output[2], int OutputSize = 2)) MultPassTwo;
+
+input HostInput;
+output HostOutput;
+
+connect HostPass.HostInput to HostInput;   /* Host channel connections */
+connect HostPass.HostOutput to HostOutput;
+
+connect HostPass.Input[0] to MultPassTwo.Output[0];
+connect HostPass.Output[0] to MultPassTwo.Input[0];
+
+connect HostPass.Input[1] to MultPassOne[5].Output[0];
+connect HostPass.Output[1] to MultPassOne[5].Input[0];
+
+connect MultPassTwo.Input[1] to MultPassOne[4].Output[0];
+connect MultPassTwo.Output[1] to MultPassOne[0].Input[0];
+
+rep i = 0 for size(MultPassOne) - 2
+  connect MultPassOne[i].Output[0] to MultPassOne[i + 1].Input[0];
+/*}}}*/
+
+/*{{{  Mapping description */
+use "hostpass.lku" for HostPass;
+place HostPass on RootTree;
+
+/*{{{  Alternative process object files */
+if ManualPlacement
+  {
+    /*{{{   */
+    use "multpass.lku" for MultPassTwo;
+    
+    rep i = 0 for size(MultPassOne)
+      use "multpass.lku" for MultPassOne[i];
+    /*}}}*/
+  }
+else
+  use "multpass.lku" for process;
+/*}}}*/
+
+place MultPassTwo on Tree[0];
+
+place MultPassOne[0] on Tree[0];
+place MultPassOne[1] on Tree[1];
+place MultPassOne[2] on Tree[0];
+place MultPassOne[3] on Tree[2];
+place MultPassOne[4] on Tree[0];
+place MultPassOne[5] on Tree[3];
+
+place HostInput on host;
+place HostOutput on host;
+
+/*{{{  Superflurous channel placements */
+if ManualPlacement
+  {
+    /*{{{   */
+    place HostPass.HostInput on RootTree.link[BootLink];
+    place HostPass.HostOutput on RootTree.link[BootLink];
+    
+    place HostPass.Input[0] on RootTree.link[2];
+    place HostPass.Output[0] on RootTree.link[2];
+    
+    place HostPass.Input[1] on RootTree.link[3];
+    place HostPass.Output[1] on RootTree.link[3];
+    
+    place MultPassTwo.Input[0] on Tree[0].link[1];
+    place MultPassTwo.Output[0] on Tree[0].link[1];
+    
+    place MultPassOne[0].Output[0] on Tree[0].link[2];
+    
+    place MultPassOne[1].Input[0] on Tree[1].link[1];
+    place MultPassOne[1].Output[0] on Tree[1].link[1];
+    
+    place MultPassOne[2].Input[0] on Tree[0].link[2];
+    place MultPassOne[2].Output[0] on Tree[0].link[3];
+    
+    place MultPassOne[3].Input[0] on Tree[2].link[0];
+    place MultPassOne[3].Output[0] on Tree[2].link[0];
+    
+    place MultPassOne[4].Input[0] on Tree[0].link[3];
+    
+    place MultPassOne[5].Input[0] on Tree[3].link[0];
+    place MultPassOne[5].Output[0] on Tree[3].link[0];
+    /*}}}*/
+  }
+/*}}}*/
+/*}}}*/

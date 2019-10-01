@@ -1,0 +1,11 @@
+-- @(#)startrd.lnk	1.5 5/29/92 
+-- C startup linker indirect file
+-- Copyright (C) INMOS Ltd, 1992
+--
+-- This linker indirect file is supplied to ease transition to the new toolset.
+-- It will not be supported in future toolsets.
+-- cstartrd.lnk should be used instead.
+--
+#mainentry C.ENTRYD.RC
+#reference information%module
+#include clibsrd.lnk

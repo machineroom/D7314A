@@ -1,0 +1,109 @@
+#include "setup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The software consists of n processes, connected as a ring, which communicate
+with each other performing simple arithmetic operations.
+
+The processes are placed on the pipe of processors.
+
+*/
+/*}}}*/
+
+/*{{{  Hardware description */
+#include "hwpipe.cfs"
+/*}}}*/
+
+/*{{{  Constant definitions */
+val c 2;
+
+val ExtraProcesses 2;
+
+val n 2 * p - 1 + ExtraProcesses;
+/*}}}*/
+
+/*{{{  Software description */
+/*{{{  Software diagram */
+/*
+-- ---------------------------------------------------------
+--
+--     Host--HostPass--------------------------
+--              |                             |
+--           MultPass[0]--MultPass[1]--..--MultPass[n-1]
+--
+-- ---------------------------------------------------------
+*/
+/*}}}*/
+
+process (interface (input HostInput, output HostOutput,
+                    input Input[c], int InputSize = c,
+                    output Output[c], int OutputSize = c)) HostPass;
+
+process (interface (input Input[c], int InputSize = c,
+                    output Output[c], int OutputSize = c)) MultPass[n];
+
+input HostInput;
+output HostOutput;
+
+connection RootToHost, HostToRoot;
+
+connect HostPass.HostInput to HostInput by RootToHost;   /* Host channel connections */
+connect HostPass.HostOutput to HostOutput by HostToRoot;
+
+rep k = 0 for c
+  {
+    /*{{{   */
+    connect HostPass.Input[k] to MultPass[n - 1].Output[k];
+    connect HostPass.Output[k] to MultPass[0].Input[k];
+    /*}}}*/
+  }
+
+rep i = 0 for n - 1
+  rep k = 0 for c
+    connect MultPass[i].Output[k] to MultPass[i + 1].Input[k];
+/*}}}*/
+
+/*{{{  Mapping description */
+use "hostpass.lku" for HostPass;
+place HostPass on RootPipe;
+
+/*{{{  Alternative process object files */
+if ManualPlacement
+  {
+    /*{{{   */
+    rep i = 0 for n
+      use "multpass.lku" for MultPass[i];
+    /*}}}*/
+  }
+else
+  use "multpass.lku" for process;
+/*}}}*/
+
+rep i = 0 for n
+  {
+    /*{{{   */
+    if i < p
+      place MultPass[i] on Pipe[i];
+    else if i < 2 * p - 1
+      place MultPass[i] on Pipe[(2 * p - 1) - (i + 1)];
+    else
+      place MultPass[i] on Pipe[0];
+    /*}}}*/
+  }
+
+place HostInput on host;
+place HostOutput on host;
+
+/*{{{  Superflurous channel placements */
+if ManualPlacement
+  {
+    /*{{{   */
+    place HostPass.HostInput on RootPipe.link[BootLink];
+    place HostPass.HostOutput on RootPipe.link[BootLink];
+    /*}}}*/
+  }
+/*}}}*/
+/*}}}*/

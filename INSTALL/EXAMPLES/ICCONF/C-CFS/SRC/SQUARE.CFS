@@ -1,0 +1,155 @@
+#include "setup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The software consists of p * p processes, connected as a square array, which
+communicate with each other performing simple arithmetic operations.
+
+The processes are placed on the square array of processors.
+
+*/
+/*}}}*/
+
+/*{{{  Hardware description */
+#include "hwsquare.cfs"
+/*}}}*/
+
+/*{{{  Software description */
+/*{{{  Software diagram */
+/*
+-- --------------------------------------------------------------------------
+--
+--     Host--HostPass
+--              |                 |                     |
+--         --MultPass[0][0]----MultPass[0][1]--....--MultPass[0][p-1]----
+--              |                 |                     |
+--         --MultPass[1][0]----MultPass[1][1]--....--MultPass[1][p-1]----
+--              |                 |                     |
+--             ...               ...                   ...
+--              |                 |                     |
+--         --MultPass[p-1][0]--MultPass[p-1][1]--..--MultPass[p-1][p-1]--
+--              |                 |                     |
+--                                                   HostPass
+--
+-- --------------------------------------------------------------------------
+*/
+/*}}}*/
+
+process (interface (input HostInput, output HostOutput,
+                    input Input[2], int InputSize = 2,
+                    output Output[2], int OutputSize = 2)) HostPass;
+
+process (interface (input Input[4], int InputSize = 4,
+                    output Output[4], int OutputSize = 4)) MultPass[p][p];
+
+input HostInput;
+output HostOutput;
+
+connect HostPass.HostInput to HostInput;   /* Host channel connections */
+connect HostPass.HostOutput to HostOutput;
+
+connect HostPass.Input[0] to MultPass[0][0].Output[Up];
+connect HostPass.Output[0] to MultPass[0][0].Input[Up];
+
+connect HostPass.Input[1] to MultPass[p - 1][p - 1].Output[Down];
+connect HostPass.Output[1] to MultPass[p - 1][p - 1].Input[Down];
+
+rep i = 0 for p
+  {
+    /*{{{   */
+    connect MultPass[i][p - 1].Input[Right] to MultPass[(i + 1) % p][0].Output[Left];
+    connect MultPass[i][p - 1].Output[Right] to MultPass[(i + 1) % p][0].Input[Left];
+    /*}}}*/
+  }
+
+rep j = 0 for p - 1
+  {
+    /*{{{   */
+    connect MultPass[p - 1][j].Input[Down] to MultPass[0][j + 1].Output[Up];
+    connect MultPass[p - 1][j].Output[Down] to MultPass[0][j + 1].Input[Up];
+    /*}}}*/
+  }
+
+rep i = 0 for p
+  rep j = 0 for p
+    {
+      /*{{{   */
+      if i < p - 1
+        {
+          /*{{{   */
+          connect MultPass[i][j].Input[Down] to MultPass[i + 1][j].Output[Up];
+          connect MultPass[i][j].Output[Down] to MultPass[i + 1][j].Input[Up];
+          /*}}}*/
+        }
+      if j < p - 1
+        {
+          /*{{{   */
+          connect MultPass[i][j].Input[Right] to MultPass[i][j + 1].Output[Left];
+          connect MultPass[i][j].Output[Right] to MultPass[i][j + 1].Input[Left];
+          /*}}}*/
+        }
+      /*}}}*/
+    }
+/*}}}*/
+
+/*{{{  Mapping description */
+use "hostpass.lku" for HostPass;
+place HostPass on RootSquare;
+
+/*{{{  Alternative process object files */
+if ManualPlacement
+  {
+    /*{{{   */
+    rep i = 0 for p
+      rep j = 0 for p
+        use "multpass.lku" for MultPass[i][j];
+    /*}}}*/
+  }
+else
+  use "multpass.lku" for process;
+/*}}}*/
+
+rep i = 0 for p
+  rep j = 0 for p
+    place MultPass[i][j] on Square[i][j];
+
+place HostInput on host;
+place HostOutput on host;
+
+/*{{{  Superflurous channel placements */
+if ManualPlacement
+  {
+    /*{{{   */
+    place HostPass.HostInput on RootSquare.link[BootLink];
+    place HostPass.HostOutput on RootSquare.link[BootLink];
+    
+    place HostPass.Input[0] on RootSquare.link[2];
+    place HostPass.Output[0] on RootSquare.link[2];
+    
+    place HostPass.Input[1] on RootSquare.link[3];
+    place HostPass.Output[1] on RootSquare.link[3];
+    
+    rep i = 0 for p
+      rep j = 0 for p
+        {
+          /*{{{   */
+          place MultPass[i][j].Input[Up] on Square[i][j].link[Up];
+          place MultPass[i][j].Output[Up] on Square[i][j].link[Up];
+          
+          place MultPass[i][j].Input[Down] on Square[i][j].link[Down];
+          place MultPass[i][j].Output[Down] on Square[i][j].link[Down];
+          
+          place MultPass[i][j].Input[Left] on Square[i][j].link[Left];
+          place MultPass[i][j].Output[Left] on Square[i][j].link[Left];
+          
+          place MultPass[i][j].Input[Right] on Square[i][j].link[Right];
+          place MultPass[i][j].Output[Right] on Square[i][j].link[Right];
+          /*}}}*/
+        }
+    /*}}}*/
+  }
+/*}}}*/
+/*}}}*/

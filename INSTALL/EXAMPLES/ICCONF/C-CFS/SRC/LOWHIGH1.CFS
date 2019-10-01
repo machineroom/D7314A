@@ -1,0 +1,96 @@
+#include "setup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The software consists of n processes which switch priorities.
+
+All processes execute on the single processor.
+
+*/
+/*}}}*/
+
+/*{{{  Hardware description */
+#include "hwone.cfs"
+/*}}}*/
+
+/*{{{  Constant definitions */
+val n 2;
+/*}}}*/
+
+/*{{{  Software description */
+/*{{{  Software diagram */
+/*
+-- ----------------------------------------------------
+--
+--     Host--HostMult----------------------
+--              |           |             |
+--           LowHigh[0]  LowHigh[1] .. LowHigh[n-1]
+--
+-- ----------------------------------------------------
+*/
+/*}}}*/
+
+process (interface (input HostInput, output HostOutput,
+                    input Input[n], int InputSize = n,
+                    output Output[n], int OutputSize = n)) HostMult;
+
+process (interface (input Input, output Output,
+                    int Count = n, int Number)) LowHigh[n];
+
+input HostInput;
+output HostOutput;
+
+connect HostMult.HostInput to HostInput;   /* Host channel connections */
+connect HostMult.HostOutput to HostOutput;
+
+rep i = 0 for n
+  {
+    /*{{{   */
+    /*{{{  set initial process priority */
+    if i % 2 == 0
+      LowHigh[i] (priority = LOW, Number = i);
+    else
+      LowHigh[i] (priority = HIGH, Number = i);
+    /*}}}*/
+    
+    connect LowHigh[i].Input to HostMult.Output[i];
+    connect LowHigh[i].Output to HostMult.Input[i];
+    /*}}}*/
+  }
+/*}}}*/
+
+/*{{{  Mapping description */
+use "hostmult.lku" for HostMult;
+place HostMult on Root;
+
+/*{{{  Alternative process object files */
+if ManualPlacement
+  {
+    /*{{{   */
+    rep i = 0 for n
+      use "lowhigh.lku" for LowHigh[i];
+    /*}}}*/
+  }
+else
+  use "lowhigh.lku" for process;
+/*}}}*/
+
+rep i = 0 for n
+  place LowHigh[i] on Root;
+
+place HostInput on host;
+place HostOutput on host;
+
+/*{{{  Superflurous channel placements */
+if ManualPlacement
+  {
+    /*{{{   */
+    place HostMult.HostInput on Root.link[BootLink];
+    place HostMult.HostOutput on Root.link[BootLink];
+    /*}}}*/
+  }
+/*}}}*/
+/*}}}*/

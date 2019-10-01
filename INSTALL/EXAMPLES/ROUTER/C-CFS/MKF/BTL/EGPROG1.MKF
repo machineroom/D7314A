@@ -1,0 +1,29 @@
+ICC=icc
+ILINK=ilink
+ICCONF=icconf
+ICOLLECT=icollect
+
+ICCOPT=$(S)ta $(S)g $(S)wt
+ILINKOPT=$(S)ta
+ICCONFOPT=
+ICOLLECTOPT=
+
+all :		egprog1.btl
+
+egprog1.btl :	egprog1.cfb
+		$(ICOLLECT) egprog1.cfb $(ICOLLECTOPT)
+
+egprog1.cfb :	egprog1.cfs proc1.lku proc2.lku
+		$(ICCONF) egprog1.cfs $(ICCONFOPT)
+
+proc1.lku :	proc1.tco
+		$(ILINK) proc1.tco $(S)o proc1.lku $(S)f cstartup.lnk $(ILINKOPT)
+
+proc1.tco :	proc1.c
+		$(ICC) proc1.c $(S)o proc1.tco $(ICCOPT)
+
+proc2.lku :	proc2.tco
+		$(ILINK) proc2.tco $(S)o proc2.lku $(S)f cstartrd.lnk $(ILINKOPT)
+
+proc2.tco :	proc2.c
+		$(ICC) proc2.c $(S)o proc2.tco $(ICCOPT)

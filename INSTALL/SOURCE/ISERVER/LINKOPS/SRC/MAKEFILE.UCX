@@ -1,0 +1,92 @@
+##
+## vax DEC/ULTRIX Connection TCP linkops makefile
+##
+## File    : makefile.ucx
+##
+## Copyright 1990, 1991 INMOS Limited
+##
+## Date    : 6/26/91
+## Version : 1.1
+##
+## 06/12/90 dave edwards - originated
+## 22/01/91 dave edwards - altered to make linkios directory at outer level
+## 23/01/91 dave edwards - put in bob's new link modules & header files
+## 24/06/91 dave edwards - altered name to makefile.dec and added DEC/TCP support
+##
+
+LINKIOS= [-.linkios]
+
+CC=cc                                                   
+LINK=link
+HOST=VAX
+OS=VMS
+COMMS=DECTCP
+END=LITTLE_ENDIAN
+O=.obj
+E=.exe
+
+####uncomment 9 lines below for qt0 & tcp support
+LINKIOFLAG0="LNKqt0"
+LINKIOFLAG1="LNKtcp"
+OPSTCPFLAG="OPStcp"
+CFLAGS= /DEBUG /DEFINE\=($(HOST),$(OS),$(COMMS),$(END), $(LINKIOFLAG0), $(LINKIOFLAG1), $(OPSTCPFLAG), MES)/INCLUDE\=$(LINKIOS)
+DEPMODULES=tops$(O) tcplink$(O)
+REALMODULES=tops$(O),tcplink$(O) $(LINKIOS)qt0link$(O) $(LINKIOS)vmserr$(O)       
+DEPOBJECTS=linkops$(O) lops$(O) metlnkio$(O) conlib$(O) lmethod$(O) debug$(O) $(DEPMODULES) 
+REALOBJECTS=linkops$(O),lops$(O),metlnkio$(O),conlib$(O),lmethod$(O),debug$(O),$(REALMODULES)
+
+##uncomment 7 lines below for just qt0 support
+##LINKIOFLAG0="LNKqt0"
+##CFLAGS= /DEFINE\=($(HOST),$(OS),$(COMMS),$(END), $(LINKIOFLAG0), MES)/INCLUDE\=$(LINKIOS) 
+##DEPMODULES=
+##REALMODULES=$(LINKIOS)qt0link$(O),$(LINKIOS)vmserr$(O)
+##DEPOBJECTS=linkops$(O) lops$(O) metlnkio$(O) conlib$(O) lmethod$(O) debug$(O) $(DEPMODULES) 
+##REALOBJECTS=linkops$(O),lops$(O),metlnkio$(O),conlib$(O),lmethod$(O),debug$(O),$(REALMODULES)
+
+####uncomment 7 lines below for just tcp support
+##LINKIOFLAG0="LNKtcp"
+##OPSTCPFLAG="OPStcp"
+##CFLAGS= /DEFINE\=($(HOST),$(OS),$(COMMS),$(END), $(OPSTCPFLAG),$(LINKIOFLAG0), MES)/INCLUDE\=$(LINKIOS)
+##DEPMODULES=tops$(O) tcplink$(O)
+##REALMODULES=tops$(O), tcplink$(O)
+##DEPOBJECTS=linkops$(O) lops$(O) metlnkio$(O) conlib$(O) lmethod$(O)  debug$(O) $(DEPMODULES) 
+##REALOBJECTS=linkops$(O),lops$(O),metlnkio$(O),conlib$(O),lmethod$(O),debug$(O),$(REALMODULES)
+
+#final dependancy
+all: $(DEPOBJECTS)
+
+clean:
+	delete *.obj;
+
+#debug dependancies to produce object
+debug$(O): debug.c types.h
+	$(CC)  $(CFLAGS) debug.c
+
+#lmethod dependanices to produce object
+lmethod$(O): lmethod.c lmethod.h
+	$(CC)  $(CFLAGS) lmethod.c
+
+#conlib dependancies to produce object
+conlib$(O): conlib.c conlib.h debug.h opserror.h lmethod.h types.h
+	$(CC)  $(CFLAGS) conlib.c
+
+#metlnkio dependancies to produce object
+metlnkio$(O): metlnkio.c lmethod.h opserror.h types.h conlib.h lmethod.h $(LINKIOS)linkio.h
+	$(CC)  $(CFLAGS) metlnkio.c 
+
+#tcplinkio dependancies to produce object
+tcplink$(O): tcplink.c types.h debug.h opsprot.h opserror.h $(LINKIOS)linkio.h
+	$(CC) $(CFLAGS) tcplink.c
+
+#lops dependancies to produce object
+lops$(O): lops.c lops.h types.h linkops.h opserror.h lmethod.h conlib.h debug.h $(LINKIOS)linkio.h
+	$(CC)  $(CFLAGS) lops.c
+
+#tops dependancies to produce object
+tops$(O): tops.c tops.h linkops.h hbeat.h opsprot.h opserror.h types.h conlib.h debug.h
+	$(CC)  $(CFLAGS)  tops.c  
+
+#linkops dependancies to produce object
+linkops$(O): linkops.c linkops.h lops.h tops.h opserror.h lmethod.h types.h debug.h conlib.h
+	$(CC)  $(CFLAGS) linkops.c
+

@@ -1,0 +1,47 @@
+/* Hardware description for three B404-3 module subsystem */
+
+define T800 (memory = 2M) B404_3;
+
+B404_3 PROC[3];
+
+edge pipe_down;
+
+connect host            to PROC[0].link[1];
+connect PROC[0].link[2] to PROC[1].link[1];
+connect PROC[1].link[2] to PROC[2].link[1];
+connect PROC[2].link[2] to pipe_down;
+
+/* Software description for highly connected two processes */
+
+val BusWidth 8;
+
+input fs;
+output ts;
+
+process (stacksize = 2k, heapsize = 16k,
+         interface(input fs, output ts,
+                   input In[BusWidth], output Out[BusWidth])) Proc1;
+
+process (stacksize = 2k, heapsize = 16k,
+         interface(input In[BusWidth], output Out[BusWidth])) Proc2;
+
+rep i = 0 for BusWidth
+{
+  connect Proc1.Out[i] to Proc2.In[i];
+  connect Proc2.Out[i] to Proc1.In[i];
+}
+
+connect Proc1.fs to fs;
+connect Proc1.ts to ts;
+
+/* Mapping description */
+
+place Proc1 on PROC[0];
+/* No application software on PROC[1] */
+place Proc2 on PROC[2];
+
+use "proc1.lku" for Proc1;
+use "proc2.lku" for Proc2;
+
+place fs on host;
+place ts on host;

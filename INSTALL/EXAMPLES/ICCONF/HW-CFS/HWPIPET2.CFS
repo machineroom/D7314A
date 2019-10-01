@@ -1,0 +1,43 @@
+#include "hwsetup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The configuration uses p processors plus a 16 bit processor, configured as a
+pipe where the root is connected to the host.
+
+*/
+/*}}}*/
+
+/*{{{  Constant definitions */
+val p 4;
+/*}}}*/
+
+/*{{{  Hardware description */
+/*{{{  Hardware diagram */
+/*
+-- ---------------------------------------------------------------
+--
+--     Host--RootPipe--Pipe[0]--Pipe[1]--..--Pipe[p-1]--Pipe16
+--
+-- ---------------------------------------------------------------
+*/
+/*}}}*/
+
+Processor RootPipe, Pipe[p];
+
+Processor16 Pipe16;
+
+connection HostLink;
+
+connect RootPipe.link[BootLink] to host by HostLink; /* Host link connection */
+
+connect RootPipe.link[2] to Pipe[0].link[1];
+
+rep i = 0 for p - 1
+  connect Pipe[i].link[2] to Pipe[i + 1].link[1];
+
+connect Pipe[p - 1].link[2] to Pipe16.link[1];
+/*}}}*/

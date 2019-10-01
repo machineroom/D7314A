@@ -1,0 +1,23 @@
+ICC=icc
+ILINK=ilink
+ICCONF=icconf
+ICOLLECT=icollect
+
+ICCOPT=$(S)ta $(S)g $(S)wt
+ILINKOPT=$(S)ta
+ICCONFOPT=
+ICOLLECTOPT=
+
+all :		types1.btl
+
+types1.btl :	types1.cfb
+		$(ICOLLECT) types1.cfb $(ICOLLECTOPT)
+
+types1.cfb :	types1.cfs setup.h types.lku
+		$(ICCONF) types1.cfs $(ICCONFOPT)
+
+types.lku :	types.tco
+		$(ILINK) types.tco $(S)o types.lku $(S)f cstartup.lnk $(ILINKOPT)
+
+types.tco :	types.c
+		$(ICC) types.c $(S)o types.tco $(ICCOPT)

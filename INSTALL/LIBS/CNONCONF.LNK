@@ -1,0 +1,10 @@
+-- @(#)cnonconf.lnk	1.2 5/22/92 
+-- C startup linker indirect file
+-- Copyright (C) INMOS Ltd, 1992
+--
+-- This linker indirect file is only for use when creating non-configured 
+-- programs using the full library. 
+--
+#mainentry C.ENTRY
+#reference information%module
+#include clibs.lnk

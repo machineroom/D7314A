@@ -1,0 +1,69 @@
+#include "hwsetup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The configuration uses p * p processors, configured as a fully connected
+square array connected to a root processor which is connected to the host.
+
+*/
+/*}}}*/
+
+/*{{{  Constant definitions */
+val p 2;
+
+val Up    1;
+val Down  2;
+val Left  0;
+val Right 3;
+/*}}}*/
+
+/*{{{  Hardware description */
+/*{{{  Hardware diagram */
+/*
+-- --------------------------------------------------------------------
+--
+--     Host--RootSquare
+--              |               |                   |
+--         --Square[0][0]----Square[0][1]--....--Square[0][p-1]----
+--              |               |                   |
+--         --Square[1][0]----Square[1][1]--....--Square[1][p-1]----
+--              |               |                   |
+--             ...             ...                 ...
+--              |               |                   |
+--         --Square[p-1][0]--Square[p-1][1]--..--Square[p-1][p-1]--
+--              |               |                   |
+--                                               RootSquare
+--
+-- --------------------------------------------------------------------
+*/
+/*}}}*/
+
+Processor RootSquare, Square[p][p];
+
+connection HostLink;
+
+connect RootSquare.link[BootLink] to host by HostLink; /* Host link connection */
+
+connect RootSquare.link[2] to Square[0][0].link[Up];
+connect RootSquare.link[3] to Square[p - 1][p - 1].link[Down];
+
+rep i = 0 for p
+  connect Square[i][p - 1].link[Right] to Square[(i + 1) % p][0].link[Left];
+
+rep j = 0 for p - 1
+  connect Square[p - 1][j].link[Down] to Square[0][j + 1].link[Up];
+
+rep i = 0 for p
+  rep j = 0 for p
+    {
+      /*{{{   */
+      if i < p - 1
+        connect Square[i][j].link[Down] to Square[i + 1][j].link[Up];
+      if j < p - 1
+        connect Square[i][j].link[Right] to Square[i][j + 1].link[Left];
+      /*}}}*/
+    }
+/*}}}*/

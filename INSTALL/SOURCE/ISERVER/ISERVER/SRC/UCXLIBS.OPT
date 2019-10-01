@@ -1,0 +1,6 @@
+!
+! Copyright INMOS Limited 1988,1990
+! @(#) Module: ucxlibs.opt, revision 1.1 of 7/5/91
+!
+sys$library:ucx$ipc.olb/lib,-
+sys$share:vaxcrtl/share

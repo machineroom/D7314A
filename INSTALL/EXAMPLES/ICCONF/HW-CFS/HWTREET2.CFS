@@ -1,0 +1,44 @@
+#include "hwsetup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The configuration uses five processors plus a 16 bit processor, configured as a
+tree where the root is connected to the host.
+
+*/
+/*}}}*/
+
+/*{{{  Hardware description */
+/*{{{  Hardware diagram */
+/*
+-- ----------------------------------------
+--
+--             Tree[3]          Tree16
+--              |                |
+--     Host--RootTree--Tree[0]--Tree[1]
+--                      |
+--                     Tree[2]
+--
+-- ----------------------------------------
+*/
+/*}}}*/
+
+Processor RootTree, Tree[4];
+
+Processor16 Tree16;
+
+connection HostLink;
+
+connect RootTree.link[BootLink] to host by HostLink; /* Host link connection */
+
+connect RootTree.link[2] to Tree[0].link[1];
+connect RootTree.link[3] to Tree[3].link[0];
+
+connect Tree[0].link[2] to Tree[1].link[1];
+connect Tree[0].link[3] to Tree[2].link[0];
+
+connect Tree[1].link[3] to Tree16.link[0];
+/*}}}*/

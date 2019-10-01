@@ -1,0 +1,541 @@
+PROC Loader ([4]CHAN OF ANY   links,
+             [4]BYTE          network.data,
+             INT              network.data.pointer,
+             [4]BYTE          memory,
+             VAL INT          Buffer.address,
+             INT              Next.address,
+             INT              Entry.point,
+	     INT	      Data.point)
+
+
+  --{{{  constants
+  VAL   MEMORY.PATTERN     IS        BYTE #FF :
+  VAL   TWO.KAY            IS        2048 :
+  VAL   data.field         IS        #3F :
+  VAL   data.field.bits    IS          6 :
+  VAL   tag.field          IS        #C0 :
+  VAL   tag.field.bits     IS          2 :
+  VAL   message            IS          0 :
+  VAL   number             IS          1 :
+  VAL   operate            IS          2 :
+  VAL   prefix             IS          3 :
+  VAL   tag.prefix         IS   prefix << data.field.bits :
+  VAL   message.length     IS         60 :
+  
+  VAL   load               IS          0 :
+  VAL   pass               IS          1 :
+  VAL   open               IS          2 :
+  VAL   operate.open       IS   BYTE ((operate << data.field.bits) \/ open) :
+  VAL   close              IS          3 :
+  VAL   operate.close      IS   BYTE ((operate << data.field.bits) \/ close) :
+  VAL   address            IS          4 :
+  VAL   execute            IS          5 :
+  VAL   Data.position	   IS          6 :
+  VAL   operate.execute    IS  BYTE ((operate << data.field.bits) \/ execute) :
+
+  VAL   operate.data.postion IS  BYTE ((operate << data.field.bits) \/ Data.position) :
+  VAL   code.load          IS         7 :
+  VAL   operate.code.load  IS         BYTE ((operate << data.field.bits) \/ code.load) :
+
+  VAL   code.address       IS         8 :
+  VAL   operate.code.address IS       BYTE ((operate << data.field.bits) \/ code.address) :
+
+  VAL  data.load           IS        9 :
+  VAL  operate.data.load   IS        BYTE ((operate << data.field.bits) \/ data.load) :
+
+  VAL  data.address        IS        10 :
+  VAL  operate.data.address  IS      BYTE ((operate << data.field.bits) \/ data.address) :
+
+  VAL  Entry.position      IS        11 :
+  VAL  operate.entry.position IS     BYTE ((operate << data.field.bits) \/ Entry.position) : 
+
+  VAL  Bootstrap.load      IS        12 :
+  VAL  Operate.bootstrap.load IS       BYTE ((operate << data.field.bits) \/ Bootstrap.load) : 
+
+  VAL  Bootstrap.end      IS        13 :
+  VAL  Operate.bootstrap.end  IS      BYTE ((operate << data.field.bits) \/ Bootstrap.end) : 
+
+  VAL  Memory.size        IS        14 :
+  VAL  Operate.memory.size    IS      BYTE ((operate << data.field.bits) \/ Memory.size) :
+
+  --{{{  VARIABLES
+  BYTE   command :
+  INT    Bootstrap.depth, links.to.load, last.address, output.link :
+  BOOL   loading :
+
+  ----------------------------------------------------------------------------
+  -- The get command procedure
+
+  PROC get.command()
+    SEQ
+      command := network.data[ network.data.pointer ]
+      network.data.pointer := network.data.pointer + 1
+  :
+
+  -- The get memory procedure
+
+  VAL buffer.size IS 120:
+  VAL Buffer.mem  IS Buffer.address - buffer.size:
+
+  PROC get.memory( VAL INT at, len )
+    SEQ
+      [memory FROM (at + buffer.size) FOR len] := 
+          [ network.data FROM network.data.pointer FOR len ]
+      network.data.pointer := network.data.pointer + len
+  :
+
+  -- The put memory procedure
+
+  INLINE PROC put.memory( VAL INT at, len, to )
+
+    links[ to ] ! [memory FROM (at + buffer.size) FOR len]
+  :
+
+  -- The read an encoded value procedure
+
+  PROC Get.encoded.value( INT value )
+    BOOL more:
+    SEQ
+      value := 0
+      more  := TRUE
+      WHILE more
+        SEQ
+          value := value << data.field.bits
+          get.command()
+          value := value PLUS ((INT command) /\ data.field)
+          more := (INT command) >= tag.prefix
+  :
+
+  --{{{  INLINE PROC Get.encoded.value.32 (INT32 Address)
+  INLINE PROC Get.encoded.value.32 (INT32 Address)
+    BOOL more:
+    SEQ
+      Address := INT32 (0)
+      more := TRUE
+      WHILE more    
+        SEQ
+          Address := Address << data.field.bits
+          get.command()
+          Address := Address PLUS (INT32 ((INT command) /\ data.field))
+          more := (INT command) >= tag.prefix
+  :
+    
+
+  --{{{  PROC Clear.memory (VAL INT32 Memory.size, VAL BYTE Value)
+
+  INLINE PROC Clear.memory.32 (VAL INT32 Memory.size, VAL BYTE Value)
+  
+    --{{{  procedures
+    --{{{  PROC ClearByteBuffer
+    PROC ClearByteBuffer ([]BYTE Buffer, VAL BYTE Value)
+    
+      --{{{  variables
+      INT Index, Count :
+      --}}}
+    
+      --{{{  main body
+      SEQ
+        --{{{  initialise first element
+        Count := 1
+        Index := Count
+        
+        Buffer[0] := Value
+        --}}}
+      
+        WHILE Index < (SIZE Buffer)
+          SEQ
+            --{{{  copy buffer onto itself
+            --{{{  calculate size to copy
+            IF
+              Count > ((SIZE Buffer) MINUS Index)
+                --{{{  near end of buffer
+                Count := (SIZE Buffer) MINUS Index
+                --}}}
+              TRUE
+                --{{{  in middle of buffer
+                SKIP
+                --}}}
+            --}}}
+            
+            [Buffer FROM Index FOR Count] := [Buffer FROM 0 FOR Count]
+            --}}}
+        
+            --{{{  update buffer positions
+            Index := Index PLUS Count
+            Count := Count PLUS Count
+            --}}}
+      --}}}
+    
+    :
+  
+    --{{{  variables
+    [MOSTPOS INT]BYTE BtMemory :
+    PLACE BtMemory AT 0 :
+    
+    INT32 Free.start :
+    --}}}
+  
+    --{{{  main body
+    SEQ
+      --{{{  calculate free memory start
+      Free.start := INT32 (TWO.KAY)
+      --}}}
+      IF
+        Memory.size > Free.start
+          --{{{  sufficient memory
+          WHILE Free.start < Memory.size
+            IF
+              (Memory.size MINUS Free.start) > (INT32 (MOSTPOS INT))
+                --{{{  more than MOSTPOS INT left
+                SEQ
+                  --{{{  clear memory segment
+                  ClearByteBuffer([BtMemory FROM INT Free.start FOR INT (MOSTPOS INT)], Value)
+                  --}}}
+                
+                  Free.start := Free.start PLUS (INT32 (MOSTPOS INT))
+                --}}}
+              TRUE
+                --{{{  less than MOSTPOS INT left
+                SEQ
+                  --{{{  clear memory segment
+                  ClearByteBuffer([BtMemory FROM INT Free.start FOR INT (Memory.size MINUS Free.start)], Value)
+                  --}}}
+                
+                  Free.start := Memory.size
+                --}}}
+          --}}}
+        TRUE
+          --{{{  insufficient memory
+          SKIP
+          --}}}
+    --}}}
+  
+  :
+
+  INLINE PROC Clear.memory (VAL INT Memory.size, VAL BYTE Value)
+  
+    --{{{  procedures
+    --{{{  PROC ClearByteBuffer
+    PROC ClearByteBuffer ([]BYTE Buffer, VAL BYTE Value)
+    
+      --{{{  variables
+      INT Index, Count :
+      --}}}
+    
+      --{{{  main body
+      SEQ
+        --{{{  initialise first element
+        Count := 1
+        Index := Count
+        
+        Buffer[0] := Value
+        --}}}
+      
+        WHILE Index < (SIZE Buffer)
+          SEQ
+            --{{{  copy buffer onto itself
+            --{{{  calculate size to copy
+            IF
+              Count > ((SIZE Buffer) MINUS Index)
+                --{{{  near end of buffer
+                Count := (SIZE Buffer) MINUS Index
+                --}}}
+              TRUE
+                --{{{  in middle of buffer
+                SKIP
+                --}}}
+            --}}}
+            
+            [Buffer FROM Index FOR Count] := [Buffer FROM 0 FOR Count]
+            --}}}
+        
+            --{{{  update buffer positions
+            Index := Index PLUS Count
+            Count := Count PLUS Count
+            --}}}
+      --}}}
+    
+    :
+    --}}}
+    --}}}
+  
+    --{{{  variables
+    [MOSTPOS INT]BYTE BtMemory :
+    PLACE BtMemory AT 0 :
+    
+    INT Free.start :
+    --}}}
+  
+    --{{{  main body
+    SEQ
+      --{{{  calculate free memory start
+      Free.start := INT (TWO.KAY)
+      --}}}
+      IF
+        Memory.size > Free.start
+          --{{{  sufficient memory
+          WHILE Free.start < Memory.size
+            IF
+              (Memory.size MINUS Free.start) > (INT (MOSTPOS INT16))
+                --{{{  more than MOSTPOS INT16 left
+                SEQ
+                  --{{{  clear memory segment
+                  ClearByteBuffer([BtMemory FROM INT Free.start FOR INT (MOSTPOS INT16)], Value)
+                  --}}}
+                
+                  Free.start := Free.start PLUS (INT (MOSTPOS INT16))
+                --}}}
+              TRUE
+                --{{{  less than MOSTPOS INT16 left
+                SEQ
+                  --{{{  clear memory segment
+                  ClearByteBuffer([BtMemory FROM INT Free.start FOR INT (Memory.size MINUS Free.start)], Value)
+                  --}}}
+                
+                  Free.start := Memory.size
+                --}}}
+          --}}}
+        TRUE
+          --{{{  insufficient memory
+          SKIP
+          --}}}
+    --}}}
+  
+  :
+
+  ----------------------------------------------------------------------------
+
+  SEQ
+    network.data.pointer := 0
+    get.command()
+    WHILE command <> operate.execute
+      INT    tag, operand :
+      --{{{  process command
+      SEQ
+        tag := (INT command) >> data.field.bits
+        operand := (INT command) /\ data.field
+        IF
+          --{{{  tag = message
+          tag = message
+            INT   load.address :
+            SEQ
+              IF
+                --{{{  loading
+                loading
+                  SEQ
+                    load.address := last.address
+                    last.address := load.address PLUS operand
+                --{{{  passing on
+                TRUE
+                  load.address := Buffer.mem
+		  --load.address := 0
+              --{{{  read in message
+              IF
+                operand <> 0
+                  get.memory( load.address, operand )
+                TRUE
+                  SKIP
+              --{{{  send message to outputs
+              SEQ i = 0 FOR 4
+                IF
+                  (links.to.load /\ (1 << i)) <> 0
+                    SEQ
+                      links[i] ! command			
+                      IF
+                        operand <> 0
+                          put.memory( load.address, operand, i )
+                        TRUE
+                          SKIP
+                  TRUE
+                    SKIP
+          --{{{  tag = operate
+          tag = operate
+            IF
+              --{{{  operand = load
+              operand = load
+                SEQ
+                  loading := TRUE
+                  links.to.load := 0
+              --{{{  operand = data.load
+              operand = data.load
+                SEQ
+                  loading := TRUE
+                  links.to.load := 0
+              --{{{  operand = Code.load
+              operand = code.load
+                SEQ
+                  loading := TRUE
+                  links.to.load := 0
+              --{{{  operand = pass
+              operand = pass
+                SEQ
+                  loading := FALSE
+                  links.to.load := 0
+              --{{{  operand = open
+              operand = open
+                INT   depth :
+                SEQ
+                  depth := 1
+                  WHILE depth <> 0
+                    SEQ
+                      get.command()
+                      IF
+                        command = operate.open
+                          depth := depth + 1
+                        command = operate.close
+                          depth := depth - 1
+                        TRUE
+                          SKIP
+                      IF
+                        depth <> 0
+                          links[output.link] !  command
+                        TRUE
+                          SKIP
+
+              --{{{  operand = address
+
+              operand = address
+                SEQ
+                  Get.encoded.value( last.address )
+                  Next.address := last.address
+
+              operand = Data.position
+                SEQ
+                  Get.encoded.value( Data.point )
+
+              operand = Entry.position
+                SEQ
+                  Get.encoded.value( Entry.point )
+
+              operand = code.address
+                SEQ
+                  Get.encoded.value( last.address )
+                  Entry.point := last.address
+
+              operand = data.address
+                SEQ
+                  Get.encoded.value( last.address )
+                  Data.point := last.address
+
+              operand = Bootstrap.load
+                INT   load.address :
+                INT   Bootstrap.length :
+                BOOL   more :
+                SEQ
+                  Bootstrap.depth := 0
+                  Bootstrap.length := 0
+                  load.address := Buffer.mem
+                  more := TRUE
+                  get.command()
+                  more := (INT command) >= data.field
+                  WHILE more
+                    SEQ
+                      Bootstrap.depth := Bootstrap.depth PLUS 1
+                      SEQ i = 0 FOR 4
+                        IF
+                          (links.to.load /\ (1 << i)) <> 0
+                            SEQ
+                              links[i] ! command
+                          TRUE
+                            SKIP
+                      get.command()
+                      more := (INT command) >= data.field
+
+                  operand := (INT command) /\ data.field
+
+                  IF 
+                    Bootstrap.depth > 0                 
+                      --{{{  read in message
+                      SEQ
+                        IF
+                          operand <> 0
+                            get.memory( load.address, operand )
+                          TRUE
+                            SKIP
+                        --{{{  send message to outputs
+                        SEQ i = 0 FOR 4
+                          IF
+                            (links.to.load /\ (1 << i)) <> 0
+                              SEQ
+                                links[i] ! command
+                                IF
+                                  operand <> 0
+                                    put.memory( load.address, operand, i )
+                                  TRUE
+                                    SKIP
+                            TRUE
+                              SKIP
+                    TRUE
+                      SEQ
+                        more := TRUE
+                        -- The next processor(s) are to be booted !!! --
+        		-- so build a bootable packet and output down link --
+
+                        WHILE more
+                          SEQ
+                            get.memory( load.address, operand )
+                            load.address := load.address PLUS operand
+                            Bootstrap.length := Bootstrap.length PLUS operand
+                            get.command()
+                            -- Stop building when a proper command is received This should --
+                            -- be when a 'Bootstrap.end' is recieved
+                            more := (INT command) < data.field
+                            operand := (INT command) /\ data.field
+
+                        SEQ i = 0 FOR 4
+                          IF
+                            (links.to.load /\ (1 << i)) <> 0
+                              SEQ
+                                links[i] ! (BYTE Bootstrap.length)
+                                IF
+                                  Bootstrap.length <> 0
+                                    put.memory( Buffer.mem, Bootstrap.length, i )
+                                  TRUE
+                                    SKIP
+                            TRUE
+                              SKIP
+
+              operand = Bootstrap.end
+                SEQ
+                  SEQ ii = 0 FOR Bootstrap.depth
+                    SEQ
+                      -- Pass on all the other bootstrap ends
+                      get.command()
+                      SEQ i = 0 FOR 4
+                        IF
+                          (links.to.load /\ (1 << i)) <> 0
+                            links[i] ! command
+                          TRUE
+                            SKIP
+                  Bootstrap.depth := 0 
+
+              --{{{  operand = MEMORY.SIZE
+              operand = Memory.size
+                --VAL Dummy.scalar IS 42 :
+                --VAL [] BYTE Command.array RETYPES Dummy.scalar :
+                --VAL Word.size IS SIZE Command.array :
+                VAL Word.size IS ((INT((MOSTPOS INT) = #7FFF)) * 2) + ((INT((MOSTPOS INT) <>  #7FFF)) * 4) :
+                SEQ
+                  IF
+                    Word.size = 2
+                      INT32 Memory.size :
+                      SEQ
+                        Get.encoded.value.32 (Memory.size)
+                        Clear.memory.32 (Memory.size, MEMORY.PATTERN)
+                    TRUE
+                      INT Memory.size :
+                      SEQ
+                        Get.encoded.value (Memory.size)
+                        Clear.memory (Memory.size, MEMORY.PATTERN)
+
+              --}}}
+
+          --{{{  tag = number
+          TRUE
+            SEQ
+              output.link := operand
+              links.to.load := links.to.load \/ (1 << output.link)
+
+        get.command()
+:
+

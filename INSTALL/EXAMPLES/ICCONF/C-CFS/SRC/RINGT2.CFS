@@ -1,0 +1,129 @@
+#include "setup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The software consists of n processes, connected as a ring, which communicate
+with each other performing simple arithmetic operations.
+
+The processes are placed on the ring of processors.
+
+*/
+/*}}}*/
+
+/*{{{  Hardware description */
+#include "hwringt2.cfs"
+/*}}}*/
+
+/*{{{  Constant definitions */
+val ExtraProcesses 2;
+
+val n p + ExtraProcesses;
+/*}}}*/
+
+/*{{{  Software description */
+/*{{{  Software diagram */
+/*
+-- -------------------------------------------------------
+--
+--     Host--HostPass--------------------------
+--              |                             |
+--           MultPass[0]--MultPass[1]--..--MultPass[n]
+--
+-- -------------------------------------------------------
+*/
+/*}}}*/
+
+process (interface (input HostInput, output HostOutput,
+                    input Input[1], int InputSize = 1,
+                    output Output[1], int OutputSize = 1)) HostPass;
+
+process (interface (input Input[1], int InputSize = 1,
+                    output Output[1], int OutputSize = 1)) MultPass[n + 1];
+
+input HostInput;
+output HostOutput;
+
+connect HostPass.HostInput to HostInput;   /* Host channel connections */
+connect HostPass.HostOutput to HostOutput;
+
+connect HostPass.Input[0] to MultPass[n].Output[0];
+connect HostPass.Output[0] to MultPass[0].Input[0];
+
+rep i = 0 for n
+  connect MultPass[i].Output[0] to MultPass[i + 1].Input[0];
+/*}}}*/
+
+/*{{{  Mapping description */
+use "hostpass.lku" for HostPass;
+place HostPass on RootRing;
+
+/*{{{  Alternative process object files */
+if ManualPlacement
+  {
+    /*{{{   */
+    rep i = 0 for n + 1
+      {
+        /*{{{   */
+        if i == n
+          use "multpass.c2h" for MultPass[i];
+        else
+          use "multpass.lku" for MultPass[i];
+        /*}}}*/
+      }
+    /*}}}*/
+  }
+else
+  {
+    /*{{{   */
+    use "multpass.c2h" for MultPass[n];
+    
+    use "multpass.lku" for process;
+    /*}}}*/
+  }
+/*}}}*/
+
+rep i = 0 for n + 1
+  {
+    /*{{{   */
+    if i < p
+      place MultPass[i] on Ring[i];
+    else if i < n
+      place MultPass[i] on Ring[p - 1];
+    else
+      place MultPass[i] on Ring16;
+    /*}}}*/
+  }
+
+place HostInput on host;
+place HostOutput on host;
+
+/*{{{  Superflurous channel placements */
+if ManualPlacement
+  {
+    /*{{{   */
+    place HostPass.HostInput on RootRing.link[BootLink];
+    place HostPass.HostOutput on RootRing.link[BootLink];
+    
+    place HostPass.Input[0] on RootRing.link[3];
+    place HostPass.Output[0] on RootRing.link[2];
+    
+    rep i = 0 for p
+      {
+        /*{{{   */
+        place MultPass[i].Input[0] on Ring[i].link[1];
+        if i < p - 1
+          place MultPass[i].Output[0] on Ring[i].link[2];
+        /*}}}*/
+      }
+    
+    place MultPass[n - 1].Output[0] on Ring[p - 1].link[2];
+    
+    place MultPass[n].Input[0] on Ring16.link[1];
+    place MultPass[n].Output[0] on Ring16.link[0];
+    /*}}}*/
+  }
+/*}}}*/
+/*}}}*/

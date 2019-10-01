@@ -1,0 +1,31 @@
+#  PC Makefile to build/clean debugger example program: cpair.btl
+
+all:		cpair.btl
+
+cpair.btl:	cpair.cfb
+		icollect cpair.cfb
+
+cpair.cfb:	cpair.cfs master.lku mult.lku
+		icconf /g /nv cpair.cfs /w
+
+cpair.cfs:
+
+master.lku:	master.tco
+		ilink master.tco /ta /f cstartup.lnk
+
+master.tco:	master.c
+		icc master.c /ta /g
+
+mult.lku:	mult.tco
+		ilink mult.tco /ta /f cstartrd.lnk
+
+mult.tco:	mult.c
+		icc mult.c /ta /g
+
+clean:
+		del cpair.btl
+		del cpair.cfb
+		del master.lku
+		del master.tco
+		del mult.lku
+		del mult.tco

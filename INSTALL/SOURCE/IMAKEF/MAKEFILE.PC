@@ -1,0 +1,55 @@
+# CMSIDENTIFIER
+# PLAY:MAKEFILE_PC@390.AAAA-FILE;3(14-DEC-92)[FROZEN]
+
+#
+#  Watcom C/386 v9.0 specific macro definitions
+#
+E=.exe
+O=.obj
+#
+CC=wcc386p
+CCOPT=/DSWITCH_CHAR="'" /DANSI /DWATCOM /oi /w4 /za /zp4
+#
+LINK=wcl386
+LINKOPT=/p /fe=imakef.exe /k32k
+#
+COPY=copy
+#
+
+# Normal version:
+IMOBJ=main$(O) procs$(O) memory$(O) derive$(O) output$(O) filename$(O) popen$(O)
+
+Dx314 : all
+Dx305 : all
+C_v4 : all
+
+all:		imakef$(E)
+
+imakef$(E) :	main$(O) procs$(O) memory$(O) derive$(O) output$(O) filename$(O) popen$(O)
+		$(LINK) $(IMOBJ) $(LINKOPT)
+		$(IBOOT) $(IBOOTOPT)
+
+main$(O):	inmos.h header.h struct.h main.c
+		$(CC) $(CCOPT) main.c
+
+procs$(O):	inmos.h header.h struct.h procs.c
+		$(CC) $(CCOPT) procs.c
+
+memory$(O):	inmos.h memory.c
+		$(CC) $(CCOPT) memory.c
+
+filename$(O):	inmos.h header.h filename.c
+		$(CC) $(CCOPT) filename.c
+
+derive$(O):	inmos.h header.h struct.h derive.c
+		$(CC) $(CCOPT) derive.c
+
+popen$(O):	inmos.h popenh.h popen.c
+		$(CC) $(CCOPT) popen.c
+
+output$(O):	inmos.h popenh.h struct.h output.c
+		$(CC) $(CCOPT) output.c
+
+clean:
+		del *.obj
+		del *.exe

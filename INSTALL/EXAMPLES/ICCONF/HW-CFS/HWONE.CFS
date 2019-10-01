@@ -1,0 +1,29 @@
+#include "hwsetup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The configuration uses one processor, connected to the host.
+
+*/
+/*}}}*/
+
+/*{{{  Hardware description */
+/*{{{  Hardware diagram */
+/*
+-- ------------------
+--
+--     Host--Root
+--
+-- ------------------
+*/
+/*}}}*/
+
+Processor Root;
+
+connection HostLink;
+
+connect Root.link[BootLink] to host by HostLink; /* Host link connection */
+/*}}}*/

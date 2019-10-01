@@ -1,0 +1,11 @@
+-- @(#)clibs.lnk	1.1 5/21/92
+-- C full library linker indirect file
+-- Copyright (C) INMOS Ltd, 1992
+--
+-- This linker indirect file lists the libraries required when using the
+-- C full library.
+--
+centry.lib
+libc.lib
+spc.lib
+  

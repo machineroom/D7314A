@@ -1,0 +1,13 @@
+-- ----------------------
+--
+-- EPROM description file
+--
+-- ----------------------
+
+root.processor.type	T8
+bootable.file		address1.btr
+
+eprom.space		40000 -- 256K
+output.format		binary
+
+output.all		address1.bin

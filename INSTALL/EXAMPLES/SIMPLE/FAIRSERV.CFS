@@ -1,0 +1,35 @@
+/* (c) Copyright INMOS Limited  1992. */
+
+/*
+The configuration uses one processor, connected to the host, on
+which is placed a lone main program */
+
+T425 (memory = 1M) Single;  /* A T425 with at least 1Mb of memory */
+
+connect Single.link[0] to host; /* Connected to the host on link 0 */
+
+/* Describe the program */
+/* The interface of a normal C program is that the C file system   */
+/* needs access to the host file system. The host runs the iserver */
+/* and is connected to the transputer network be an edge called    */
+/* 'host'.                                                         */
+
+process (stacksize = 4K,          /* 4Kb of stack used       */
+         heapsize = 50K,          /* 50 Kb of heap requested */
+         interface (input FromHost, output ToHost)
+        ) Simple;
+
+input HostInput;      /* Define the edge from the host */
+output HostOutput;    /* Define the edge to the host   */
+
+connect Simple.FromHost to HostInput;   /* connect the process to the */
+connect Simple.ToHost to HostOutput;    /* software edges             */
+
+/*  Mapping description */
+
+use "fairserv.lku" for Simple;  /* name of the linked unit to use   */
+place Simple on Single;        /* put the process on the processor */
+
+place HostInput on host;       /* say that the software edges are    */
+place HostOutput on host;      /* mapped onto the hardware host edge */
+

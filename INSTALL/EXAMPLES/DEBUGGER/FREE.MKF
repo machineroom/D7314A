@@ -1,0 +1,18 @@
+#  PC Makefile to build/clean debugger example program: free.bah
+
+all:		free.bah
+
+free.bah:	free.cah
+		icollect /t free.cah /o free.bah
+
+free.cah:	free.tax
+		ilink /ta free.tax /f cnonconf.lnk /o free.cah
+
+free.tax:	free.c
+		icc /ta /g free.c /o free.tax
+
+clean:
+		del free.bah
+		del free.cfb
+		del free.cah
+		del free.tax

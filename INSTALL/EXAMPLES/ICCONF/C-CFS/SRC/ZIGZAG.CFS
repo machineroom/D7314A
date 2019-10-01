@@ -1,0 +1,182 @@
+#include "setup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The software consists of n processes, connected as a pipe zig-zaging the square
+array, which communicate with each other performing simple arithmetic operations.
+
+The processes are placed on the square array of processors.
+
+*/
+/*}}}*/
+
+/*{{{  Hardware description */
+#include "hwsquare.cfs"
+/*}}}*/
+
+/*{{{  Constant definitions */
+val n p * p;
+/*}}}*/
+
+/*{{{  Software description */
+/*{{{  Software diagram */
+/*
+-- ---------------------------------------------------------
+--
+--     Host--HostPass
+--              |
+--           MultPass[0]--MultPass[1]--..--MultPass[n-1]
+--
+-- ---------------------------------------------------------
+*/
+/*}}}*/
+
+process (interface (input HostInput, output HostOutput,
+                    input Input[1], int InputSize = 1,
+                    output Output[1], int OutputSize = 1)) HostPass;
+
+process (interface (input Input[2], int InputSize = 2,
+                    output Output[2], int OutputSize = 2)) MultPass[n];
+
+input HostInput;
+output HostOutput;
+
+connect HostPass.HostInput to HostInput;   /* Host channel connections */
+connect HostPass.HostOutput to HostOutput;
+
+connect HostPass.Input[0] to MultPass[0].Output[0];
+connect HostPass.Output[0] to MultPass[0].Input[0];
+
+rep i = 0 for n - 1
+  {
+    /*{{{   */
+    connect MultPass[i].Input[1] to MultPass[i + 1].Output[0];
+    connect MultPass[i].Output[1] to MultPass[i + 1].Input[0];
+    /*}}}*/
+  }
+
+connect MultPass[n - 1].Input[1] to MultPass[n - 1].Output[1];
+/*}}}*/
+
+/*{{{  Mapping description */
+use "hostpass.lku" for HostPass;
+place HostPass on RootSquare;
+
+/*{{{  Alternative process object files */
+if ManualPlacement
+  {
+    /*{{{   */
+    rep i = 0 for p
+      rep j = 0 for p
+        use "multpass.lku" for MultPass[p * i + j];
+    /*}}}*/
+  }
+else
+  use "multpass.lku" for process;
+/*}}}*/
+
+rep i = 0 for p
+  rep j = 0 for p
+    {
+      /*{{{   */
+      if i % 2 == 0
+        place MultPass[p * i + j] on Square[i][j];
+      else
+        place MultPass[p * (i + 1) - (j + 1)] on Square[i][j];
+      /*}}}*/
+    }
+
+place HostInput on host;
+place HostOutput on host;
+
+/*{{{  Superflurous channel placements */
+if ManualPlacement
+  {
+    /*{{{   */
+    place HostPass.HostInput on RootSquare.link[BootLink];
+    place HostPass.HostOutput on RootSquare.link[BootLink];
+    
+    place HostPass.Input[0] on RootSquare.link[2];
+    place HostPass.Output[0] on RootSquare.link[2];
+    
+    rep i = 0 for p
+      rep j = 0 for p
+        {
+          /*{{{   */
+          if i % 2 == 0
+            {
+              /*{{{   */
+              if j > 0
+                {
+                  /*{{{   */
+                  place MultPass[p * i + j].Input[0] on Square[i][j].link[Left];
+                  place MultPass[p * i + j].Output[0] on Square[i][j].link[Left];
+                  /*}}}*/
+                }
+              else
+                {
+                  /*{{{   */
+                  place MultPass[p * i + j].Input[0] on Square[i][j].link[Up];
+                  place MultPass[p * i + j].Output[0] on Square[i][j].link[Up];
+                  /*}}}*/
+                }
+              
+              if j < p - 1
+                {
+                  /*{{{   */
+                  place MultPass[p * i + j].Input[1] on Square[i][j].link[Right];
+                  place MultPass[p * i + j].Output[1] on Square[i][j].link[Right];
+                  /*}}}*/
+                }
+              else if i < p - 1
+                {
+                  /*{{{   */
+                  place MultPass[p * i + j].Input[1] on Square[i][j].link[Down];
+                  place MultPass[p * i + j].Output[1] on Square[i][j].link[Down];
+                  /*}}}*/
+                }
+              /*}}}*/
+            }
+          else
+            {
+              /*{{{   */
+              if j < p - 1
+                {
+                  /*{{{   */
+                  place MultPass[p * (i + 1) - (j + 1)].Input[0] on Square[i][j].link[Right];
+                  place MultPass[p * (i + 1) - (j + 1)].Output[0] on Square[i][j].link[Right];
+                  /*}}}*/
+                }
+              else
+                {
+                  /*{{{   */
+                  place MultPass[p * (i + 1) - (j + 1)].Input[0] on Square[i][j].link[Up];
+                  place MultPass[p * (i + 1) - (j + 1)].Output[0] on Square[i][j].link[Up];
+                  /*}}}*/
+                }
+              
+              if j > 0
+                {
+                  /*{{{   */
+                  place MultPass[p * (i + 1) - (j + 1)].Input[1] on Square[i][j].link[Left];
+                  place MultPass[p * (i + 1) - (j + 1)].Output[1] on Square[i][j].link[Left];
+                  /*}}}*/
+                }
+              else if i < p - 1
+                {
+                  /*{{{   */
+                  place MultPass[p * (i + 1) - (j + 1)].Input[1] on Square[i][j].link[Down];
+                  place MultPass[p * (i + 1) - (j + 1)].Output[1] on Square[i][j].link[Down];
+                  /*}}}*/
+                }
+              /*}}}*/
+            }
+          /*}}}*/
+        }
+    /*}}}*/
+  }
+/*}}}*/
+/*}}}*/

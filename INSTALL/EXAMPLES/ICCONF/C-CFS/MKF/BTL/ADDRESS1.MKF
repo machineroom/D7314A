@@ -1,0 +1,29 @@
+ICC=icc
+ILINK=ilink
+ICCONF=icconf
+ICOLLECT=icollect
+
+ICCOPT=$(S)ta $(S)g $(S)wt
+ILINKOPT=$(S)ta
+ICCONFOPT=
+ICOLLECTOPT=
+
+all :		address1.btl
+
+address1.btl :	address1.cfb
+		$(ICOLLECT) address1.cfb $(ICOLLECTOPT)
+
+address1.cfb :	address1.cfs setup.h address.lku hostmult.lku
+		$(ICCONF) address1.cfs $(ICCONFOPT)
+
+address.lku :	address.tco
+		$(ILINK) address.tco $(S)o address.lku $(S)f cstartup.lnk $(ILINKOPT)
+
+address.tco :	address.c
+		$(ICC) address.c $(S)o address.tco $(ICCOPT)
+
+hostmult.lku :	hostmult.tco
+		$(ILINK) hostmult.tco $(S)o hostmult.lku $(S)f cstartrd.lnk $(ILINKOPT)
+
+hostmult.tco :	hostmult.c
+		$(ICC) hostmult.c $(S)o hostmult.tco $(ICCOPT)

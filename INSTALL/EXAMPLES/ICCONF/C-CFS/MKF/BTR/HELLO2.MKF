@@ -1,0 +1,42 @@
+ICC=icc
+ILINK=ilink
+ICCONF=icconf
+IEPROM=ieprom
+ICOLLECT=icollect
+
+ROMRUN=ro
+
+ICCOPT=$(S)ta $(S)g $(S)wt
+ILINKOPT=$(S)ta
+ICCONFOPT=$(S)$(ROMRUN) $(S)rs 256k $(S)p Root
+IEPROMOPT=
+ICOLLECTOPT=
+
+all :		hello2.bin
+
+hello2.bin :	hello2.btr hello2.epr
+		$(IEPROM) hello2.epr $(IEPROMOPT)
+
+hello2.btr :	hello2.cfb
+		$(ICOLLECT) hello2.cfb $(ICOLLECTOPT)
+
+hello2.cfb :	hello2.cfs setup.h hellop.lku worldp.lku hostmult.lku
+		$(ICCONF) hello2.cfs $(ICCONFOPT)
+
+hellop.lku :	hellop.tco
+		$(ILINK) hellop.tco $(S)o hellop.lku $(S)f cstartup.lnk $(ILINKOPT)
+
+hellop.tco :	hellop.c
+		$(ICC) hellop.c $(S)o hellop.tco $(ICCOPT)
+
+worldp.lku :	worldp.tco
+		$(ILINK) worldp.tco $(S)o worldp.lku $(S)f cstartup.lnk $(ILINKOPT)
+
+worldp.tco :	worldp.c
+		$(ICC) worldp.c $(S)o worldp.tco $(ICCOPT)
+
+hostmult.lku :	hostmult.tco
+		$(ILINK) hostmult.tco $(S)o hostmult.lku $(S)f cstartrd.lnk $(ILINKOPT)
+
+hostmult.tco :	hostmult.c
+		$(ICC) hostmult.c $(S)o hostmult.tco $(ICCOPT)

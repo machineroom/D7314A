@@ -1,0 +1,106 @@
+--{{{  DEF B014
+DEF B014
+  --{{{  SIZES
+  SIZES
+    T2   1
+    C4   2
+    SLOT 8
+    EDGE 27
+  END
+  --}}}
+  --{{{  T2CHAIN
+  T2CHAIN
+    T2 0, LINK 0 C4 0
+    T2 0, LINK 3 C4 1
+  END
+  --}}}
+  --{{{  HARDWIRE
+  HARDWIRE
+    --{{{  TRAMs TO C004s
+    --{{{  TRAM 0
+    C4 1, LINK 1 TO SLOT 0, LINK 2
+    C4 0, LINK 1 TO SLOT 0, LINK 3
+    --}}}
+    --{{{  TRAM 1
+    C4 0, LINK 2 TO SLOT 1, LINK 0
+    C4 1, LINK 2 TO SLOT 1, LINK 1
+    C4 1, LINK 3 TO SLOT 1, LINK 2
+    C4 0, LINK 3 TO SLOT 1, LINK 3
+    --}}}
+    --{{{  TRAM 2
+    C4 0, LINK 4 TO SLOT 2, LINK 0
+    C4 1, LINK 4 TO SLOT 2, LINK 1
+    C4 1, LINK 5 TO SLOT 2, LINK 2
+    C4 0, LINK 5 TO SLOT 2, LINK 3
+    --}}}
+    --{{{  TRAM 3
+    C4 0, LINK 6 TO SLOT 3, LINK 0
+    C4 1, LINK 6 TO SLOT 3, LINK 1
+    C4 1, LINK 7 TO SLOT 3, LINK 2
+    C4 0, LINK 7 TO SLOT 3, LINK 3
+    --}}}
+    --{{{  TRAM 4
+    C4 0, LINK 8 TO SLOT 4, LINK 0
+    C4 1, LINK 8 TO SLOT 4, LINK 1
+    C4 1, LINK 9 TO SLOT 4, LINK 2
+    C4 0, LINK 9 TO SLOT 4, LINK 3
+    --}}}
+    --{{{  TRAM 5
+    C4 0, LINK 10 TO SLOT 5, LINK 0
+    C4 1, LINK 10 TO SLOT 5, LINK 1
+    C4 1, LINK 11 TO SLOT 5, LINK 2
+    C4 0, LINK 11 TO SLOT 5, LINK 3
+    --}}}
+    --{{{  TRAM 6
+    C4 0, LINK 12 TO SLOT 6, LINK 0
+    C4 1, LINK 12 TO SLOT 6, LINK 1
+    C4 1, LINK 13 TO SLOT 6, LINK 2
+    C4 0, LINK 13 TO SLOT 6, LINK 3
+    --}}}
+    --{{{  TRAM 7
+    C4 0, LINK 14 TO SLOT 7, LINK 0
+    C4 1, LINK 14 TO SLOT 7, LINK 1
+    C4 1, LINK 15 TO SLOT 7, LINK 2
+    C4 0, LINK 15 TO SLOT 7, LINK 3
+    --}}}
+    --}}}
+  
+    --{{{  EDGES 0..7 (P2) TO C004 A (0)
+    C4 0, LINK 16 TO EDGE 0
+    C4 0, LINK 17 TO EDGE 1
+    C4 0, LINK 18 TO EDGE 2
+    C4 0, LINK 19 TO EDGE 3
+    C4 0, LINK 20 TO EDGE 4
+    C4 0, LINK 21 TO EDGE 5
+    C4 0, LINK 22 TO EDGE 6
+    C4 0, LINK 23 TO EDGE 7
+    --}}}
+    --{{{  EDGES 8..15 (P4) TO C004 B (1)
+    C4 1, LINK 16 TO EDGE 8
+    C4 1, LINK 17 TO EDGE 9
+    C4 1, LINK 18 TO EDGE 10
+    C4 1, LINK 19 TO EDGE 11
+    C4 1, LINK 20 TO EDGE 12
+    C4 1, LINK 21 TO EDGE 13
+    C4 1, LINK 22 TO EDGE 14
+    C4 1, LINK 23 TO EDGE 15
+    --}}}
+    --{{{  EDGES 16..23 (P5) TO C004 B (1)
+    C4 1, LINK 24 TO EDGE 16
+    C4 1, LINK 25 TO EDGE 17
+    C4 1, LINK 26 TO EDGE 18
+    C4 1, LINK 27 TO EDGE 19
+    C4 1, LINK 28 TO EDGE 20
+    C4 1, LINK 29 TO EDGE 21
+    C4 1, LINK 30 TO EDGE 22
+    C4 1, LINK 31 TO EDGE 23
+    --}}}
+    --{{{  EDGES 24..26 (virtual edges) TO C004s
+    C4 0, LINK 0 TO EDGE 24
+    C4 0, LINK 31 TO EDGE 25
+    C4 1, LINK 0 TO EDGE 26
+    --}}}
+  END
+  --}}}
+--}}}
+PIPE B014 END

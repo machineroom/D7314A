@@ -1,0 +1,111 @@
+/* Hardware description for specialised sub-system */
+
+T800 (memory = 32K)  GENERATE;
+T425 (memory = 128K) FILTERA;
+T425 (memory = 128K) FILTERB;
+T425 (memory = 128K) RESULTA;
+T425 (memory = 128K) RESULTB;
+T425 (memory = 2M)   MONITOR;
+
+edge port1, port2;
+
+connect host             to MONITOR.link[1];
+connect MONITOR.link[2]  to RESULTA.link[1];
+connect RESULTA.link[2]  to FILTERA.link[1];
+connect FILTERA.link[2]  to GENERATE.link[1];
+connect GENERATE.link[2] to FILTERB.link[1];
+connect FILTERB.link[2]  to RESULTB.link[1];
+connect RESULTB.link[0]  to MONITOR.link[3];
+
+connect RESULTA.link[3]  to FILTERA.link[0];
+connect RESULTB.link[3]  to FILTERB.link[0];
+
+connect MONITOR.link[0]  to GENERATE.link[3];
+
+connect GENERATE.link[0] to RESULTB.link[2];
+connect FILTERA.link[3]  to port1;
+connect FILTERB.link[3]  to port2;
+
+/* Software description for filter test program */
+
+input fs;
+output ts;
+
+process (stacksize = 2k, heapsize = 16k,
+         interface(input fs, output ts, input Res[2], output Cntl[4])) Monitor;
+
+process (stacksize = 2k, heapsize = 16k,
+         interface(input In, output Out, input Cntl)) Result[2];
+
+process (stacksize = 2k, heapsize = 16k,
+         interface(input In, output Out, input Cntl)) Filter[2];
+
+process (stacksize = 1k, heapsize = 4k,
+         interface(output Out[2])) Generate;
+
+rep i = 0 for 2
+{
+  connect Monitor.Cntl[i]   to Result[i].Cntl;
+  connect Monitor.Cntl[i+2] to Filter[i].Cntl;
+
+  connect Result[i].Out     to Monitor.Res[i];
+
+  connect Filter[i].Out     to Result[i].In;
+
+  connect Generate.Out[i]   to Filter[i].In;
+}
+
+connect Monitor.fs to fs;
+connect Monitor.ts to ts;
+
+/* Mapping description */
+
+place Generate  on GENERATE;
+place Filter[0] on FILTERA;
+place Filter[1] on FILTERB;
+place Result[0] on RESULTA;
+place Result[1] on RESULTB;
+place Monitor   on MONITOR;
+
+use "generate.lku" for Generate;
+use "filter.lku"   for Filter[0];
+use "filter.lku"   for Filter[1];
+use "result.lku"   for Result[0];
+use "result.lku"   for Result[1];
+use "monitor.lku"  for Monitor;
+
+place fs on host;
+place ts on host;
+
+/* Mapping optimisation */
+
+/* Prevent through routing via GENERATE */
+GENERATE (routecost = INFINITE_COST);
+
+/* Ensure minimum overhead on FILTERA */
+FILTERA (routecost = INFINITE_COST, linkquota = 1);
+
+/* Ensure minimum overhead on FILTERB */
+FILTERB (routecost = INFINITE_COST, linkquota = 1);
+
+/* Optimise Generate to Filter 0 Path */
+place Generate.Out[0] on GENERATE.link[1];
+place Filter[0].In    on FILTERA.link[2];
+
+/* Optimise Generate to Filter 1 Path */
+place Generate.Out[1] on GENERATE.link[2];
+place Filter[1].In    on FILTERB.link[1];
+
+/* Optimise Filter to Result 0 Path */
+place Filter[0].Out on FILTERA.link[1];
+place Result[0].In  on RESULTA.link[2];
+
+/* Optimise Filter to Result 1 Path */
+place Filter[1].Out on FILTERB.link[2];
+place Result[1].In  on RESULTB.link[1];
+
+/* Use otherwise unspecified linkquotas to check
+   overheads on GENERATE, RESULTA, and RESULTB */
+GENERATE (linkquota = 0);
+RESULTA (linkquota = 2);
+RESULTB (linkquota = 2);

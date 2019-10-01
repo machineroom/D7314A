@@ -1,0 +1,18 @@
+#  PC Makefile to build/clean debugger example program: facs.bah
+
+all:		facs.bah
+
+facs.bah:	facs.cah
+		icollect /t facs.cah /o facs.bah
+
+facs.cah:	facs.tax
+		ilink /ta facs.tax /f cnonconf.lnk /o facs.cah
+
+facs.tax:	facs.c
+		icc /ta /g facs.c /o facs.tax
+
+clean:
+		del facs.bah
+		del facs.cfb
+		del facs.cah
+		del facs.tax

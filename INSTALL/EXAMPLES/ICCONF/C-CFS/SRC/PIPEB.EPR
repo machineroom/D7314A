@@ -1,0 +1,13 @@
+-- ----------------------
+--
+-- EPROM description file
+--
+-- ----------------------
+
+root.processor.type	T8
+bootable.file		pipeb.btr
+
+eprom.space		40000 -- 256K
+output.format		binary
+
+output.all		pipeb.bin

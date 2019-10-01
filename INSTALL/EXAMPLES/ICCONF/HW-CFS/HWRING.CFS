@@ -1,0 +1,42 @@
+#include "hwsetup.h"
+
+/*{{{  Information header */
+/*
+
+(c) Copyright INMOS Ltd 1990. All Rights Reserved.
+
+The configuration uses p processors, configured as a ring where the root is
+connected to the host.
+
+*/
+/*}}}*/
+
+/*{{{  Constant definitions */
+val p 4;
+/*}}}*/
+
+/*{{{  Hardware description */
+/*{{{  Hardware diagram */
+/*
+-- -------------------------------------------------------
+--
+--             ---------------------------------
+--             |                               |
+--     Host--RootRing--Ring[0]--Ring[1]--..--Ring[p-1]
+--
+-- -------------------------------------------------------
+*/
+/*}}}*/
+
+Processor RootRing, Ring[p];
+
+connection HostLink;
+
+connect RootRing.link[BootLink] to host by HostLink; /* Host link connection */
+
+connect RootRing.link[2] to Ring[0].link[1];
+connect RootRing.link[3] to Ring[p - 1].link[0];
+
+rep i = 0 for p - 1
+  connect Ring[i].link[2] to Ring[i + 1].link[1];
+/*}}}*/

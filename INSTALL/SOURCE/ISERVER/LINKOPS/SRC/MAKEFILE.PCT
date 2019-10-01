@@ -1,0 +1,96 @@
+##
+## pc linkops makefile
+##
+## File    : %M%
+##
+## Copyright 1990, 1991 INMOS Limited
+##
+## Date    : %G%
+## Version : %I%
+##
+## 06/12/90 dave edwards - originated
+## 22/01/91 dave edwards - altered to make linkios directory at outer level
+## 23/01/91 dave edwards - put in bob's new link modules & header files
+##
+
+LINKIOS=..\..\linkios\pct
+
+CC=cl -c
+HOST=PC
+OS=MSDOS
+COMMS=PCTCP
+END=LITTLE_ENDIAN
+MODEL=L
+CFLAGS=-Ox -W1 -A$(MODEL) -Au -Gt16
+O=.obj
+E=.exe
+
+####uncomment line below for tcp linkops support
+TCP =-DOPStcp
+TMODULE = tops$(O)
+
+####uncomment next 2 lines for tcplink linkio support
+LMODULE1 = tcplink$(O)
+L1 = -DLNKtcp
+
+####uncomment next 2 lines for b004 support
+LMODULE2 = $(LINKIOS)\b004link$(O)
+L2 = -DLNKb004
+
+####uncomment next 2 lines for b008 support
+LMODULE3 = $(LINKIOS)\b008link$(O)
+L3 = -DLNKb008
+
+LINKMODULES= $(LMODULE1) $(LMODULE2) $(LMODULE3)
+LINKFLAGS = $(L1) $(L2) $(L3)
+
+DFLAGS= -D$(HOST) -D$(OS) -D$(COMMS) -D$(END) $(LINKFLAGS) $(TCP) -DMES
+
+#define objects
+OPSOBJECTS=linkops$(O) lops$(O) $(TMODULE) metlnkio$(O) conlib$(O) lmethod$(O) debug$(O) $(LMODULE1)
+OBJECTS=$(OPSOBJECTS) $(LINKMODULES)
+
+#final target
+all: $(OPSOBJECTS)
+
+clean:
+	del *.obj
+
+#debug dependancies to produce object
+debug$(O): debug.c types.h
+	$(CC) $(CFLAGS) $(DFLAGS) debug.c
+
+#lmethod dependanices to produce object
+lmethod$(O): lmethod.c lmethod.h
+	$(CC) $(CFLAGS) $(DFLAGS) lmethod.c
+
+#conlib dependancies to produce object
+conlib$(O): conlib.c conlib.h debug.h opserror.h lmethod.h types.h
+	$(CC) $(CFLAGS) $(DFLAGS) conlib.c
+
+#metlnkio dependancies to produce object
+metlnkio$(O): metlnkio.c lmethod.h opserror.h types.h conlib.h $(LINKIOS)\linkio.h
+	copy $(LINKIOS)\linkio.h .
+	$(CC) $(CFLAGS) $(DFLAGS) metlnkio.c 
+	del linkio.h
+
+#lops dependancies to produce object
+lops$(O): lops.c lops.h types.h linkops.h hbeat.h opserror.h lmethod.h conlib.h debug.h $(LINKIOS)\linkio.h
+	copy $(LINKIOS)\linkio.h .
+	$(CC) $(CFLAGS) $(DFLAGS) lops.c
+	del linkio.h
+
+#tops dependancies to produce object
+tops$(O): tops.c tops.h linkops.h hbeat.h opsprot.h opserror.h types.h conlib.h debug.h
+	$(CC)  $(CFLAGS) $(DFLAGS) tops.c
+ 
+#tcplink dependancies to produce object
+tcplink$(O): tcplink.c types.h debug.h opsprot.h opserror.h
+	copy $(LINKIOS)\linkio.h .
+	$(CC) $(CFLAGS) $(DFLAGS) tcplink.c
+	del linkio.h
+
+#linkops dependancies to produce object
+linkops$(O): linkops.c linkops.h lops.h tops.h opserror.h lmethod.h types.h debug.h conlib.h
+	$(CC) $(CFLAGS) $(DFLAGS) linkops.c
+

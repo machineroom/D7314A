@@ -1,0 +1,157 @@
+## CMSIDENTIFIER
+## ISERVER:MAKE_ISERVER_S3@528.AAAA-FILE;1(02-MAR-92)[UNDER-DEVELOPMENT]
+##
+## sun3 iserver makefile
+##
+## File    : makefile.s3
+##
+## Copyright 1990, 1991 INMOS Limited
+##
+
+MAKEFILE=makefile.s3
+
+ENDIAN=     BIG_ENDIAN
+LINKOPS=    ../../linkops/s3
+LINKIOS=    ../../linkios/s3
+
+CC=         cc
+CFLAGS=     -O -D`arch` -DSUN -c -D$(ENDIAN) -I$(LINKOPS)
+
+LD=         cc
+LDFLAGS=    -o iserver -Bstatic
+
+# Useful commands
+
+SCCSGET=    sccs get
+
+
+EVERYSRC=   Makefile.cpp \
+            boot.c boot.h \
+            bsd.h \
+            change.log \
+            filec.c \
+            files.c files.h \
+            helios.h \
+            hostc.c \
+            ims_bcmd.h \
+            info.c info.h \
+            iserver.c iserver.h \
+            iserver.opt \
+            linkops.opt \
+            misc.c misc.h \
+            msdos.h \
+            msdosc.c \
+            nohost.h \
+            pack.c pack.h \
+            parsecl.c parsecl.h \
+            record.c record.h \
+            serve.c serve.h \
+            server.h \
+            serverc.c \
+            sh.c sh.h \
+            sp.h \
+            srvtypes.h \
+            ttyio.c ttyio.h \
+            ucxlibs.opt \
+            vaxrms.c vaxrms.h \
+            vms.h \
+            winlibs.opt
+
+HDRS=       server.h \
+            sp.h \
+            bsd.h \
+            srvtypes.h \
+            ims_bcmd.h
+
+SRCS=       iserver.c \
+            hostc.c \
+            filec.c \
+            serverc.c \
+            sh.c \
+            serve.c \
+            boot.c \
+            pack.c \
+            info.c \
+            ttyio.c \
+            files.c \
+            parsecl.c \
+            record.c \
+            misc.c
+
+OBJECTS=    iserver.o \
+            hostc.o \
+            filec.o \
+            serverc.o \
+            sh.o \
+            serve.o \
+            boot.o \
+            pack.o \
+            info.o \
+            ttyio.o \
+            files.o \
+            parsecl.o \
+            record.o \
+            misc.o
+
+# Put this lot in a library one day !
+LOBJ=       $(LINKOPS)/conlib.o \
+            $(LINKOPS)/debug.o \
+            $(LINKOPS)/linkops.o \
+            $(LINKOPS)/lmethod.o \
+            $(LINKOPS)/lops.o \
+            $(LINKOPS)/metlnkio.o \
+            $(LINKOPS)/tcplink.o \
+            $(LINKOPS)/tops.o
+
+LNKOBJ=     $(LINKIOS)/b011link.o \
+            $(LINKIOS)/b014link.o \
+            $(LINKIOS)/b016link.o
+
+TARGET=iserver
+
+all:        $(TARGET)
+
+$(TARGET):  $(OBJECTS)
+	           $(LD) $(LDFLAGS) $(OBJECTS) $(LOBJ) $(LNKOBJ)
+
+clean:
+	           rm -rf $(OBJECTS)
+	           rm -rf $(TARGET)
+
+depend:
+	           makedepend -f$(MAKEFILE) -- $(CFLAGS) -- -s "#THIS LINE REQUIRED BY MAKEDEPEND!" $(SRCS)
+
+
+#THIS LINE REQUIRED BY MAKEDEPEND!
+
+iserver.o:  iserver.c server.h srvtypes.h sp.h bsd.h
+iserver.o:  iserver.h sh.h misc.h serve.h files.h
+iserver.o:  parsecl.h boot.h
+hostc.o:    hostc.c server.h
+hostc.o:    srvtypes.h sp.h bsd.h iserver.h pack.h misc.h
+hostc.o:    ttyio.h serve.h
+filec.o:    filec.c server.h srvtypes.h sp.h bsd.h
+filec.o:    iserver.h pack.h misc.h files.h record.h
+serverc.o:  serverc.c server.h srvtypes.h sp.h bsd.h
+serverc.o:  iserver.h pack.h misc.h
+sh.o:       sh.c server.h
+sh.o:       srvtypes.h sp.h bsd.h iserver.h sh.h files.h
+serve.o:    serve.c server.h srvtypes.h sp.h bsd.h
+serve.o:    iserver.h misc.h ttyio.h serve.h
+boot.o:     boot.c server.h srvtypes.h sp.h bsd.h
+boot.o:     iserver.h misc.h boot.h
+pack.o:     pack.c server.h srvtypes.h sp.h bsd.h iserver.h pack.h
+info.o:     info.c server.h srvtypes.h sp.h bsd.h iserver.h pack.h
+info.o:     info.h
+ttyio.o:    ttyio.c server.h
+ttyio.o:    srvtypes.h sp.h bsd.h iserver.h pack.h misc.h
+ttyio.o:    ttyio.h
+files.o:    files.c server.h srvtypes.h sp.h bsd.h
+files.o:    files.h
+parsecl.o:  parsecl.c server.h srvtypes.h sp.h bsd.h iserver.h
+parsecl.o:  pack.h sh.h parsecl.h
+record.o:   record.c server.h srvtypes.h sp.h bsd.h
+record.o:   iserver.h record.h files.h pack.h misc.h
+misc.o:     misc.c server.h srvtypes.h sp.h
+misc.o:     bsd.h iserver.h sh.h misc.h files.h
+vaxrms.o:   vaxrms.c server.h files.h vaxrms.h

@@ -1,0 +1,18 @@
+#  PC Makefile to build/clean debugger example program: abort.bah
+
+all:		abort.bah
+
+abort.bah:	abort.cah
+		icollect /t abort.cah /o abort.bah
+
+abort.cah:	abort.tax
+		ilink /ta abort.tax /f cnonconf.lnk /o abort.cah
+
+abort.tax:	abort.c
+		icc /ta /g abort.c /o abort.tax
+
+clean:
+		del abort.bah
+		del abort.cfb
+		del abort.cah
+		del abort.tax
